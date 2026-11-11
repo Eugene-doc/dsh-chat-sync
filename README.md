@@ -42,8 +42,10 @@
 
 ## Установка
 
-На этом компьютере плагин уже установлен из этого репозитория. Чтобы поставить
-его на другой компьютер, используйте пакет из релиза:
+### Обычная установка на любой компьютер
+
+На этом компьютере плагин уже установлен. Чтобы поставить его на другой
+компьютер или восстановить после переустановки, используйте пакет из релиза:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
@@ -56,11 +58,20 @@
 `Eugene-doc/dsh-sync`; на каждом компьютере войдите в один и тот же аккаунт
 GitHub.
 
-Для локальной разработки можно установить плагин прямо из папки:
+### Только для этого ПК: режим разработки
+
+Этот вариант не нужен на новом компьютере. Команда ниже не скачивает пакет, а
+подключает уже существующую папку с исходниками плагина:
 
 ```powershell
 dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-chat-sync"
 ```
+
+> **Не выполняйте эту команду на новом ПК.** Там нет пути
+> `D:\My Drive\DeepSeekHarness\plugins\dsh-chat-sync`, поэтому установка
+> завершится ошибкой. На новом ПК используйте команду из раздела «Обычная
+> установка» или скрипт восстановления ниже. Режим `file:` нужен только для
+> разработки на компьютере, где лежит папка с исходниками.
 
 ## Восстановление после переустановки Windows
 
@@ -283,8 +294,10 @@ GitHub whether the relay is actually private and warns when it is public.
 
 ## Install
 
-On this computer the plugin is already installed from this checkout. To install
-it on another computer, use the released package:
+### Normal installation on any computer
+
+On this computer the plugin is already installed. To install it on another
+computer or recover it after a reinstall, use the released package:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
@@ -296,11 +309,20 @@ Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
 **Sync now**. The default repository is `Eugene-doc/dsh-sync`; sign in to the
 same GitHub account on every computer.
 
-For a local development install, point the plugin manager at this directory:
+### This PC only: development mode
+
+This option is not needed on a new computer. The command below does not download
+a package; it links the existing source folder:
 
 ```powershell
 dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-chat-sync"
 ```
+
+> **Do not run this on a new PC.** The path
+> `D:\My Drive\DeepSeekHarness\plugins\dsh-chat-sync` does not exist there, so
+> installation will fail. On a new PC use the command from “Normal installation”
+> or the recovery script below. The `file:` mode is only for development on the
+> computer that holds the source folder.
 
 ## Reinstalling Windows or recovering the app
 
