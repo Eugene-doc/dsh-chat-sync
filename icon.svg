@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Chat Sync">
+  <defs>
+    <linearGradient id="bg" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="18" y1="18" x2="46" y2="46" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity=".98"/>
+      <stop offset="1" stop-color="#DBEAFE" stop-opacity=".92"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
+  <path d="M15 24.5A7.5 7.5 0 0 1 22.5 17h13A7.5 7.5 0 0 1 43 24.5v5A7.5 7.5 0 0 1 35.5 37H28l-6.7 4.7a1 1 0 0 1-1.6-.8V37h-.2A4.5 4.5 0 0 1 15 32.5v-8Z" fill="url(#shine)"/>
+  <path d="M28 39.5A7.5 7.5 0 0 1 35.5 32h8A7.5 7.5 0 0 1 51 39.5v4a4.5 4.5 0 0 1-4.5 4.5h-.3v3.2a1 1 0 0 1-1.6.8L39 47h-3.5a7.5 7.5 0 0 1-7.5-7.5Z" fill="#BFDBFE"/>
+  <path d="M22.5 23.5h9.8M27.6 20.3l3.4 3.2-3.4 3.2M42 34.2h-7.2M37.9 31.4l-3.1 2.8 3.1 2.8" fill="none" stroke="#1D4ED8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

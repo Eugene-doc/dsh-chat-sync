@@ -1,0 +1,5 @@
+# Chat Sync bundle: mount the Host half. The Web Client half is declared by
+# package.json `dsh.client` and served by the plugin manager.
+- insert:
+    - id: chat-sync
+      name: dsh-chat-sync
