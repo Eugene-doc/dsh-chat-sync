@@ -57,6 +57,22 @@ For a local development install, point the plugin manager at this directory:
 dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-chat-sync"
 ```
 
+### Reinstalling Windows or recovering the app
+
+The plugin code is public; the chat data is private. After a clean Windows
+install, run the bootstrap script:
+
+```powershell
+irm https://raw.githubusercontent.com/Eugene-doc/dsh-chat-sync/main/scripts/install-windows.ps1 `
+  -OutFile "$env:TEMP\chat-sync-install.ps1"
+powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
+```
+
+It installs DSH, Git and GitHub CLI if needed, signs in, installs the plugin and
+writes the default configuration. Then restart DSH and press **Sync now** in
+**Settings → Chats**. See [the recovery guide](docs/reinstall.md) for the manual
+route, what survives a reinstall, and what must be backed up separately.
+
 ## Use
 
 - **Sync now** exchanges changes immediately. The button is disabled while a
