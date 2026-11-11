@@ -37,7 +37,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. Попросит войти в GitHub как `Eugene-doc`.
 4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
 5. Установит плагин из релиза
-   [v1.0.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.0.0).
+   [v1.1.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.1.0).
 6. Запишет конфигурацию по умолчанию.
 
 После этого полностью закройте и откройте DeepSeek Harness, зайдите в
@@ -65,7 +65,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.0.0/dsh-chat-sync-1.0.0.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.1.0/dsh-chat-sync-1.1.0.tgz"
    ```
 
 5. Полностью закройте и снова откройте DSH.
@@ -138,7 +138,7 @@ The script:
 3. Asks you to sign in to GitHub as `Eugene-doc`.
 4. Checks access to the private `Eugene-doc/dsh-sync` repository.
 5. Installs the plugin from the
-   [v1.0.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.0.0)
+   [v1.1.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.1.0)
    release.
 6. Writes the default configuration.
 
@@ -167,7 +167,7 @@ official sites and run the script again.
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.0.0/dsh-chat-sync-1.0.0.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.1.0/dsh-chat-sync-1.1.0.tgz"
    ```
 
 5. Fully quit and reopen DSH.

@@ -52,6 +52,8 @@ window.__ModuleLoader__.load({
         every: 'Every {minutes} min',
         includeAttachments: 'Include attachments',
         includeAttachmentsDesc: 'Images and files referenced by chats. This can make the repository much larger.',
+        addComputerName: 'Add computer name to duplicate titles',
+        addComputerNameDesc: 'When an imported chat has the same title as another chat, append “ · PC name” so they are easy to tell apart.',
         devices: 'Computers',
         devicesDesc: 'Each computer keeps its own snapshot of the conversation history.',
         noOtherDevices: 'Open DSH on another computer with this plugin and the same GitHub account. It will appear here after the first sync.',
@@ -68,6 +70,7 @@ window.__ModuleLoader__.load({
         incoming: '{count} received',
         outgoing: '{count} sent',
         updated: '{count} updated',
+        renamed: '{count} renamed',
         conflictCount: '{count} conflicts',
         syncError: 'Sync did not finish',
         details: 'Details',
@@ -144,6 +147,8 @@ window.__ModuleLoader__.load({
         every: 'Каждые {minutes} мин',
         includeAttachments: 'Передавать вложения',
         includeAttachmentsDesc: 'Изображения и файлы из чатов. Репозиторий может заметно вырасти.',
+        addComputerName: 'Добавлять имя компьютера к одинаковым названиям',
+        addComputerNameDesc: 'Если у импортированного чата совпадает название с другим чатом, добавить « · Имя ПК», чтобы их было легко различить.',
         devices: 'Компьютеры',
         devicesDesc: 'Каждый компьютер хранит собственную копию истории разговоров.',
         noOtherDevices: 'Откройте DSH на другом компьютере с этим плагином и тем же аккаунтом GitHub. Он появится здесь после первой синхронизации.',
@@ -160,6 +165,7 @@ window.__ModuleLoader__.load({
         incoming: 'Получено: {count}',
         outgoing: 'Отправлено: {count}',
         updated: 'Обновлено: {count}',
+        renamed: 'Переименовано: {count}',
         conflictCount: 'Конфликтов: {count}',
         syncError: 'Синхронизация не завершилась',
         details: 'Подробности',
@@ -267,6 +273,7 @@ window.__ModuleLoader__.load({
       const parts = []
       if (last.imported) parts.push(t('incoming', { count: last.imported }))
       if (last.updated) parts.push(t('updated', { count: last.updated }))
+      if (last.titlesRenamed) parts.push(t('renamed', { count: last.titlesRenamed }))
       if (last.exported) parts.push(t('outgoing', { count: last.exported }))
       if (last.conflicts) parts.push(t('conflictCount', { count: last.conflicts }))
       return parts.length ? parts.join(' · ') : t('upToDate')
@@ -280,6 +287,7 @@ window.__ModuleLoader__.load({
         return parts.join(' · ') || t('upToDate')
       }
       if (item?.code === 'pulled') return t('incoming', { count: item.data?.imported || 0 })
+      if (item?.code === 'renamed') return t('renamed', { count: item.data?.renamed || 0 })
       if (item?.code === 'error') return t('syncError')
       return item?.text || ''
     }
@@ -1143,6 +1151,26 @@ window.__ModuleLoader__.load({
                   void patchConfig(
                     { includeAttachments: !status.settings.includeAttachments },
                     'includeAttachments',
+                  ),
+              }),
+            ),
+            h(
+              'div',
+              { className: 'cs-row' },
+              h(
+                'div',
+                { className: 'cs-row-text' },
+                h('div', { className: 'cs-row-title' }, t('addComputerName')),
+                h('div', { className: 'cs-row-desc' }, t('addComputerNameDesc')),
+              ),
+              h(Switch, {
+                checked: status.settings.addComputerName !== false,
+                disabled: saving === 'addComputerName',
+                label: t('addComputerName'),
+                onChange: () =>
+                  void patchConfig(
+                    { addComputerName: status.settings.addComputerName === false },
+                    'addComputerName',
                   ),
               }),
             ),

@@ -82,6 +82,48 @@ async function makeRelay(root) {
   return bare
 }
 
+async function addSecondRemoteSession(root, id, title) {
+  const seed = path.join(root, 'seed')
+  const rows = [
+    {
+      type: 'session',
+      version: 4,
+      id,
+      createdAt: 1700000000500,
+      cwd: 'D:\\work\\demo',
+      isSeeded: false,
+      delegationDepth: 0,
+    },
+    {
+      type: 'session/title',
+      seq: 0,
+      time: 1700000000600,
+      data: { title, messageSeqs: [], source: { kind: 'fallback' } },
+    },
+  ]
+  const relative = 'sessions/--D-work-demo--/' + id + '/session.v4.jsonl.zstd'
+  await fs.mkdir(path.dirname(path.join(seed, 'devices', 'other', relative)), { recursive: true })
+  await fs.writeFile(path.join(seed, 'devices', 'other', relative), encodeRows(rows))
+  const manifestPath = path.join(seed, 'devices', 'other', 'manifest.json')
+  const manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'))
+  manifest.sessions.push({
+    id,
+    title,
+    workspacePath: 'D:\\work\\demo',
+    workspaceTitle: 'demo',
+    createdAt: 1700000000500,
+    updatedAt: 1700000000600,
+    messages: 0,
+    size: 1,
+    hash: 'y',
+    file: relative,
+  })
+  await writeJsonAtomic(manifestPath, manifest)
+  git(seed, 'add', '-A')
+  git(seed, 'commit', '-m', 'seed duplicate title')
+  git(seed, 'push', 'origin', 'HEAD:main')
+}
+
 function fakeContext() {
   const store = new Map()
   const attached = []
@@ -155,6 +197,70 @@ test('imports a remote session through the persistence seam and attaches it to a
   const status = await engine.getStatus()
   assert.equal(status.stats.localChats, 0) // the fake store has no filesystem log
   assert.equal(status.devices.length, 2)
+})
+
+test('adds the source computer name when an imported title is already used', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-titles-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const bare = await makeRelay(root)
+  const secondId = 'session-66666666-6666-4666-8666-666666666666'
+  await addSecondRemoteSession(root, secondId, 'Remote conversation')
+  const home = path.join(root, 'home')
+  await fs.mkdir(path.join(home, 'sessions'), { recursive: true })
+  const fake = fakeContext()
+  const engine = new ChatSyncEngine(fake.ctx, { home, log: () => {} })
+  await engine.init()
+  engine.config.remote = bare
+  engine.config.branch = 'main'
+  engine.config.autoSync = false
+
+  const result = await engine.runSync()
+  assert.equal(result.ok, true, result.error)
+  assert.equal(result.imported, 2)
+  const titleEvents = fake.store.get(secondId).events.filter(event => event.type === 'session/title')
+  assert.equal(titleEvents.at(-1).data.title, 'Remote conversation · Other PC')
+  assert.deepEqual(titleEvents.at(-1).data.source, { kind: 'user' })
+})
+
+test('renames duplicate local titles with the current computer name', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-local-titles-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const home = path.join(root, 'home')
+  const fake = fakeContext()
+  const make = async (id, createdAt) => {
+    const rows = [
+      {
+        type: 'session',
+        version: 4,
+        id,
+        createdAt,
+        cwd: 'D:\\work\\demo',
+        isSeeded: false,
+        delegationDepth: 0,
+      },
+      {
+        type: 'session/title',
+        seq: 0,
+        time: createdAt + 1,
+        data: { title: 'Same title', messageSeqs: [], source: { kind: 'fallback' } },
+      },
+    ]
+    const dir = path.join(home, 'sessions', '--D-work-demo--', id)
+    await fs.mkdir(dir, { recursive: true })
+    await fs.writeFile(path.join(dir, 'session.v4.jsonl.zstd'), encodeRows(rows))
+    fake.store.set(id, { header: rows[0], events: rows.slice(1) })
+  }
+  await make('session-77777777-7777-4777-8777-777777777777', 1700000000000)
+  await make('session-88888888-8888-4888-8888-888888888888', 1700000001000)
+  const engine = new ChatSyncEngine(fake.ctx, { home, log: () => {} })
+  await engine.init()
+  engine.state.deviceName = 'This PC'
+  const result = await engine.disambiguateLocalTitles()
+  assert.equal(result.renamed, 1)
+  const titleEvents = fake.store
+    .get('session-88888888-8888-4888-8888-888888888888')
+    .events.filter(event => event.type === 'session/title')
+  assert.equal(titleEvents.at(-1).data.title, 'Same title · This PC')
 })
 
 test('keeps diverged remote sessions as conflict copies instead of overwriting', async t => {

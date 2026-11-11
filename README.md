@@ -15,6 +15,10 @@
 - Дописывает новые ходы, если локальный чат является точным префиксом удалённого.
 - Не перезаписывает чат, который изменился в двух местах: локальная версия
   остаётся, а удалённая копия сохраняется в `~/.dsh/chat-sync/conflicts/`.
+- Если у импортированного чата уже есть «тёзка», добавляет к названию имя
+  компьютера-источника: `Программа рядом · Other PC`. Уже существующие
+  одинаковые названия различаются при первой синхронизации после обновления.
+  Это можно отключить.
 - Показывает состояние, компьютеры, последние события, размер передачи и коммит
   в **Настройки → Чаты**.
 - По желанию передаёт вложения из чатов.
@@ -50,7 +54,7 @@
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.0.0/dsh-chat-sync-1.0.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.1.0/dsh-chat-sync-1.1.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -72,6 +76,21 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > завершится ошибкой. На новом ПК используйте команду из раздела «Обычная
 > установка» или скрипт восстановления ниже. Режим `file:` нужен только для
 > разработки на компьютере, где лежит папка с исходниками.
+
+## Обновление до 1.1.0
+
+На каждом компьютере, где стоит 1.0.0, выполните:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
+  plugin --profile desktop add `
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.1.0/dsh-chat-sync-1.1.0.tgz"
+```
+
+Полностью закройте и снова откройте DeepSeek Harness. Откройте
+**Настройки → Чаты** и нажмите **Синхронизировать**. Первая синхронизация
+добавит имя компьютера к уже существующим одинаковым названиям; повторять
+вручную ничего не нужно.
 
 ## Восстановление после переустановки Windows
 
@@ -112,7 +131,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. Попросит войти в GitHub как `Eugene-doc`.
 4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
 5. Установит плагин из релиза
-   [v1.0.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.0.0).
+   [v1.1.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.1.0).
 6. Запишет конфигурацию по умолчанию.
 
 После этого полностью закройте и откройте DeepSeek Harness, зайдите в
@@ -140,7 +159,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.0.0/dsh-chat-sync-1.0.0.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.1.0/dsh-chat-sync-1.1.0.tgz"
    ```
 
 5. Полностью закройте и снова откройте DSH.
@@ -173,6 +192,10 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
   10 минут, пока приложение открыто. Можно выбрать 5, 10, 30 или 60 минут.
 - **Передавать вложения** добавляет изображения и файлы из чатов. По умолчанию
   выключено, потому что репозиторий может быстро вырасти.
+- **Добавлять имя компьютера к одинаковым названиям** включено по умолчанию.
+  Если импортированный чат называется так же, как другой чат, к нему
+  добавляется ` · Имя ПК`; при повторном совпадении — номер. Заголовок
+  записывается в журнал сессии и синхронизируется как обычное изменение.
 - **Изменить** переключает на другой приватный репозиторий или ветку. Локальная
   копия пересоберётся при следующей синхронизации; локальные чаты не затрагиваются.
 - Новые чаты с другого компьютера прикрепляются к рабочей области с тем же путём,
@@ -269,6 +292,9 @@ computers through one private GitHub repository.
 - Appends newer turns when the local chat is an exact prefix of the remote one.
 - Never rewrites a chat that changed in two places: it keeps the local copy and
   saves the remote copy under `~/.dsh/chat-sync/conflicts/`.
+- Adds the source computer name to an imported chat when its title is already
+  used: `Example chat · Other PC`. Existing duplicate titles are fixed on the
+  first sync after the update. This can be turned off.
 - Shows the relay state, computers, recent activity, transfer size and commit in
   **Settings → Chats**.
 - Optionally carries content-addressed chat attachments.
@@ -302,7 +328,7 @@ computer or recover it after a reinstall, use the released package:
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.0.0/dsh-chat-sync-1.0.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.1.0/dsh-chat-sync-1.1.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -323,6 +349,20 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > installation will fail. On a new PC use the command from “Normal installation”
 > or the recovery script below. The `file:` mode is only for development on the
 > computer that holds the source folder.
+
+## Updating to 1.1.0
+
+On every computer that still runs 1.0.0:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
+  plugin --profile desktop add `
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.1.0/dsh-chat-sync-1.1.0.tgz"
+```
+
+Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
+**Sync now**. The first sync adds the computer name to existing duplicate titles;
+no manual rename is needed.
 
 ## Reinstalling Windows or recovering the app
 
@@ -369,6 +409,10 @@ See [the recovery guide](docs/reinstall.md) for the manual route and more detail
   while the app is open. You can choose 5, 10, 30 or 60 minutes.
 - **Include attachments** adds images and files referenced by chats. It is off
   by default because the relay can grow quickly.
+- **Add computer name to duplicate titles** is on by default. When an imported
+  chat has the same title as another chat, ` · PC name` is appended (with a
+  number on further collisions). The title is written to the session log and
+  syncs like any other change.
 - **Change** switches to another private GitHub repository or branch. The local
   checkout is rebuilt on the next sync; local chats are untouched.
 - New chats imported from another computer are attached to a workspace with the

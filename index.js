@@ -117,6 +117,7 @@ function registerTools(ctx, engine, log) {
                 ok: status.last.ok,
                 imported: status.last.imported,
                 exported: status.last.exported,
+                titlesRenamed: status.last.titlesRenamed || 0,
                 error: status.last.error || null,
                 durationMs: status.last.durationMs,
               }

@@ -28,4 +28,10 @@ test('configuration validation refuses unsafe branches and unknown intervals', (
   assert.equal(validateConfigPatch(base, { intervalMinutes: 7 }).ok, false)
   assert.equal(validateConfigPatch(base, { autoSync: 'yes' }).ok, false)
   assert.equal(validateConfigPatch(base, { includeAttachments: true }).config.includeAttachments, true)
+  assert.equal(validateConfigPatch(base, { addComputerName: false }).config.addComputerName, false)
+  assert.equal(validateConfigPatch(base, { addComputerName: 'yes' }).ok, false)
+})
+
+test('computer-name disambiguation is on by default', () => {
+  assert.equal(defaultConfig().addComputerName, true)
 })
