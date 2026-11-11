@@ -33,6 +33,9 @@ window.__ModuleLoader__.load({
         connection: 'Connection',
         connectionDesc: 'The private repository where your computers meet.',
         private: 'Private',
+        public: 'Public',
+        publicWarning: 'This repository is public',
+        publicWarningBody: 'Anyone can read the chat history in this repository. Switch to a private repository before syncing personal conversations.',
         branch: 'Branch',
         change: 'Change',
         cancel: 'Cancel',
@@ -59,7 +62,7 @@ window.__ModuleLoader__.load({
         conflictsDesc: 'The same chat changed on two computers. The local version was kept and the remote copy is preserved in the conflicts folder.',
         copyPath: 'Copy folder path',
         copied: 'Copied',
-        privacy: 'Only chats and, when enabled, attachments are uploaded. API keys, settings and credentials never leave this computer.',
+        privacy: 'Only chats and, when enabled, attachments are uploaded. App credentials and settings are never read. Anything you typed into a chat is part of its history, so keep this repository private.',
         firstHint: 'Run the first sync to create this computer’s snapshot in the relay.',
         upToDate: 'Already up to date',
         incoming: '{count} received',
@@ -122,6 +125,9 @@ window.__ModuleLoader__.load({
         connection: 'Подключение',
         connectionDesc: 'Приватный репозиторий, где встречаются ваши компьютеры.',
         private: 'Приватный',
+        public: 'Публичный',
+        publicWarning: 'Этот репозиторий публичный',
+        publicWarningBody: 'Любой может прочитать историю чатов в этом репозитории. Переключитесь на приватный репозиторий, прежде чем синхронизировать личные разговоры.',
         branch: 'Ветка',
         change: 'Изменить',
         cancel: 'Отмена',
@@ -148,7 +154,7 @@ window.__ModuleLoader__.load({
         conflictsDesc: 'Один и тот же чат изменился на двух компьютерах. Локальная версия сохранена, удалённая копия лежит в папке конфликтов.',
         copyPath: 'Скопировать путь',
         copied: 'Скопировано',
-        privacy: 'Передаются только чаты и, если включено, вложения. Ключи API, настройки и учётные данные не покидают компьютер.',
+        privacy: 'Передаются только чаты и, если включено, вложения. Учётные данные приложения и настройки не читаются. Всё, что вы написали в чате, входит в его историю, поэтому держите репозиторий приватным.',
         firstHint: 'Запустите первую синхронизацию, чтобы создать снимок этого компьютера в репозитории.',
         upToDate: 'Уже актуально',
         incoming: 'Получено: {count}',
@@ -817,6 +823,15 @@ window.__ModuleLoader__.load({
             })
           : null,
 
+        repo.private === false
+          ? h(Notice, {
+              tone: 'warn',
+              icon: 'shield',
+              title: t('publicWarning'),
+              body: t('publicWarningBody'),
+            })
+          : null,
+
         !gitReady
           ? h(Notice, {
               title: t('gitMissing'),
@@ -953,11 +968,19 @@ window.__ModuleLoader__.load({
                   'div',
                   { className: 'cs-repo-name' },
                   repo.label || t('repoPlaceholder'),
-                  h(
-                    'span',
-                    { style: { marginLeft: 7, verticalAlign: 1 } },
-                    h(Badge, { tone: 'blue' }, h(Icon, { name: 'shield', size: 10 }), t('private')),
-                  ),
+                  repo.private === true
+                    ? h(
+                        'span',
+                        { style: { marginLeft: 7, verticalAlign: 1 } },
+                        h(Badge, { tone: 'blue' }, h(Icon, { name: 'shield', size: 10 }), t('private')),
+                      )
+                    : repo.private === false
+                      ? h(
+                          'span',
+                          { style: { marginLeft: 7, verticalAlign: 1 } },
+                          h(Badge, { tone: 'amber' }, t('public')),
+                        )
+                      : null,
                 ),
                 h(
                   'div',

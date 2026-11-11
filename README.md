@@ -18,8 +18,10 @@ computers through one private GitHub repository.
 - Optionally carries content-addressed chat attachments.
 - Exposes a `chat_sync` tool so the assistant can report status or run a sync.
 
-It deliberately does **not** upload API keys, credentials, plugin settings,
-workspaces or project files. The repository is expected to be private.
+It deliberately does **not** read API keys, credentials, plugin settings,
+workspaces or project files. Anything you typed into a chat is part of that
+chat's history, so the repository must stay private. The settings page asks
+GitHub whether the relay is actually private and warns when it is public.
 
 ## Requirements
 
