@@ -58,6 +58,11 @@ if (-not $dsh) {
     Start-Process -FilePath $installer -ArgumentList '/S' -Wait
     Start-Sleep -Seconds 5
     $dsh = Find-Dsh
+    if (-not $dsh) {
+        Write-Host 'Silent installation did not complete. The installer window will open; finish it, then press Enter.'
+        Start-Process -FilePath $installer -Wait
+        $dsh = Find-Dsh
+    }
     if (-not $dsh) { throw 'DeepSeek Harness is still not installed.' }
 }
 Write-Host "DeepSeek Harness: $dsh"
