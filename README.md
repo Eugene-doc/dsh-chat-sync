@@ -1,9 +1,254 @@
 # Chat Sync
 
+Небольшой плагин DeepSeek Harness, который переносит историю чатов между
+компьютерами через один приватный репозиторий GitHub.
+
+![Страница Chat Sync в настройках](https://github.com/Eugene-doc/dsh-chat-sync/raw/main/docs/settings.png)
+
+Английская версия — в свёрнутом блоке в конце файла.
+
+## Что делает
+
+- Хранит по одному снимку каждого компьютера в `devices/<device-id>/` внутри
+  приватного Git-репозитория.
+- Импортирует чаты, которых ещё нет на этом компьютере.
+- Дописывает новые ходы, если локальный чат является точным префиксом удалённого.
+- Не перезаписывает чат, который изменился в двух местах: локальная версия
+  остаётся, а удалённая копия сохраняется в `~/.dsh/chat-sync/conflicts/`.
+- Показывает состояние, компьютеры, последние события, размер передачи и коммит
+  в **Настройки → Чаты**.
+- По желанию передаёт вложения из чатов.
+- Даёт ассистенту инструмент `chat_sync`, чтобы узнать статус или запустить
+  синхронизацию.
+
+Плагин намеренно **не читает** API-ключи, учётные данные, настройки плагинов,
+рабочие области и файлы проектов. Всё, что вы написали в чате, является частью
+его истории, поэтому репозиторий должен оставаться приватным. Страница настроек
+спрашивает GitHub, действительно ли репозиторий приватный, и предупреждает,
+если он публичный.
+
+## Требования
+
+- DeepSeek Harness **0.2.0-rc.1** или новее (Desktop или Web).
+- [Git](https://git-scm.com/downloads) на каждом компьютере.
+- Аккаунт GitHub, которому принадлежит приватный репозиторий с данными. Эта
+  копия настроена на `Eugene-doc/dsh-sync`.
+- В Windows один раз авторизуйте Git в этом аккаунте:
+
+  ```powershell
+  gh auth login --hostname github.com --git-protocol https --web
+  gh auth setup-git
+  ```
+
+## Установка
+
+На этом компьютере плагин уже установлен из этого репозитория. Чтобы поставить
+его на другой компьютер, используйте пакет из релиза:
+
+```powershell
+& "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
+  plugin --profile desktop add `
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.0.0/dsh-chat-sync-1.0.0.tgz"
+```
+
+Полностью закройте и снова откройте DeepSeek Harness. Откройте
+**Настройки → Чаты** и нажмите **Синхронизировать**. Репозиторий по умолчанию —
+`Eugene-doc/dsh-sync`; на каждом компьютере войдите в один и тот же аккаунт
+GitHub.
+
+Для локальной разработки можно установить плагин прямо из папки:
+
+```powershell
+dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-chat-sync"
+```
+
+## Восстановление после переустановки Windows
+
+Плагин и история чатов — разные вещи. Код плагина лежит в публичном
+репозитории, а история — в приватном
+[`Eugene-doc/dsh-sync`](https://github.com/Eugene-doc/dsh-sync).
+
+### Что случится с данными
+
+| Что | Где хранится | Переживёт переустановку Windows |
+| --- | --- | --- |
+| Код плагина | GitHub, публичный репозиторий | Да |
+| История чатов | Приватный Git-репозиторий | Да, если последняя синхронизация успела загрузить изменения |
+| Локальные сессии | `C:\Users\<user>\.dsh\sessions` | Нет, если диск C: отформатирован |
+| API-ключи и настройки DSH | `C:\Users\<user>\.dsh\.credentials.yaml` и профиль | Нет, их нужно настроить заново |
+| Вложения | Локально + репозиторий, если включён тумблер | Только если включена синхронизация вложений |
+
+После чистой установки Windows локальная папка `.dsh` исчезнет. Всё, что было
+загружено в приватный репозиторий, плагин скачает заново. Всё, что не успело
+загрузиться, восстановить будет неоткуда.
+
+### Способ 1: один скрипт
+
+Откройте PowerShell от имени пользователя и выполните:
+
+```powershell
+irm https://raw.githubusercontent.com/Eugene-doc/dsh-chat-sync/main/scripts/install-windows.ps1 `
+  -OutFile "$env:TEMP\chat-sync-install.ps1"
+
+powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
+```
+
+Скрипт:
+
+1. Проверит, установлен ли DeepSeek Harness, и при необходимости скачает
+   официальный установщик.
+2. Проверит Git и GitHub CLI, при необходимости поставит их через `winget`.
+3. Попросит войти в GitHub как `Eugene-doc`.
+4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
+5. Установит плагин из релиза
+   [v1.0.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.0.0).
+6. Запишет конфигурацию по умолчанию.
+
+После этого полностью закройте и откройте DeepSeek Harness, зайдите в
+**Настройки → Чаты** и нажмите **Синхронизировать**.
+
+Если `winget` недоступен, установите Git и GitHub CLI вручную с официальных
+сайтов и запустите скрипт ещё раз.
+
+### Способ 2: вручную
+
+1. Установите [DeepSeek Harness](https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe)
+   и запустите его один раз, чтобы создался профиль.
+2. Установите [Git](https://git-scm.com/downloads) и
+   [GitHub CLI](https://cli.github.com/).
+3. Войдите в GitHub и настройте Git:
+
+   ```powershell
+   gh auth login --hostname github.com --git-protocol https --web
+   gh auth setup-git
+   gh repo view Eugene-doc/dsh-sync --json visibility
+   ```
+
+4. Установите плагин:
+
+   ```powershell
+   & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
+     plugin --profile desktop add `
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.0.0/dsh-chat-sync-1.0.0.tgz"
+   ```
+
+5. Полностью закройте и снова откройте DSH.
+6. Откройте **Настройки → Чаты** и нажмите **Синхронизировать**.
+
+### Если DSH не удаляли, а только переустановили
+
+Папка `C:\Users\<user>\.dsh` может остаться на месте. Не удаляйте её до первой
+синхронизации: локальные чаты и настройки плагина помогут восстановиться даже
+без сети. После установки плагина нажмите **Синхронизировать** — плагин
+объединит локальную историю с репозиторием.
+
+### Что подготовить заранее
+
+- Доступ к аккаунту GitHub `Eugene-doc`: пароль, второй фактор или recovery-коды.
+- Успешную синхронизацию перед переустановкой: нажмите **Синхронизировать** и
+  дождитесь зелёного статуса и коммита в приватном репозитории.
+- При необходимости — копию папки `C:\Users\<user>\.dsh` на внешний диск.
+- Отдельно сохраните API-ключи и настройки моделей: они не синхронизируются.
+- Если нужны вложения, заранее включите **Передавать вложения** и дождитесь
+  завершения синхронизации.
+
+Подробная версия: [docs/reinstall.md](docs/reinstall.md).
+
+## Использование
+
+- **Синхронизировать** сразу обменивается изменениями. Кнопка недоступна, пока
+  синхронизация уже идёт.
+- **Синхронизировать автоматически** загружает изменения при запуске и каждые
+  10 минут, пока приложение открыто. Можно выбрать 5, 10, 30 или 60 минут.
+- **Передавать вложения** добавляет изображения и файлы из чатов. По умолчанию
+  выключено, потому что репозиторий может быстро вырасти.
+- **Изменить** переключает на другой приватный репозиторий или ветку. Локальная
+  копия пересоберётся при следующей синхронизации; локальные чаты не затрагиваются.
+- Новые чаты с другого компьютера прикрепляются к рабочей области с тем же путём,
+  затем к области с тем же именем папки, затем к первой доступной. Если список
+  сессий не обновился сразу, может понадобиться перезапуск.
+
+Перед переходом на другой компьютер нажмите **Синхронизировать**: таймер
+периодической синхронизации не делает загрузку при завершении приложения.
+
+## Как происходит объединение
+
+DSH хранит каждый чат как append-only JSONL-журнал, сжатый Zstandard. Chat Sync
+распаковывает кадры, сравнивает записи по последовательности и действует так:
+
+| Локальная и удалённая версии | Результат |
+| --- | --- |
+| совпадают | ничего делать не нужно |
+| локальная — точный префикс | удалённый хвост дописывается через `sessionPersistence` |
+| удалённая — точный префикс | локальная версия сохраняется и загружается в этом запуске |
+| истории расходятся | локальная версия сохраняется, удалённые байты — в копии конфликта |
+
+Чат, который сейчас открыт и принадлежит локальному writer, откладывается до
+следующей синхронизации. Частично записанный журнал пропускается, а не
+импортируется наполовину.
+
+Каждый компьютер пишет только в свой каталог `devices/<id>/`, поэтому обычные
+Git-push не конфликтуют. Рабочая копия репозитория с данными находится в
+`~/.dsh/chat-sync/repo`.
+
+## Где хранятся данные
+
+```
+devices/<device-id>/
+  device.json       имя компьютера, платформа, последняя синхронизация
+  manifest.json     индекс чатов (заголовок, рабочая область, хеш, размер, updatedAt)
+  sessions/         append-only журналы сессий DSH
+  attachments/      необязательные blobs с адресацией по содержимому
+```
+
+Локальное состояние:
+
+```
+config.json         репозиторий, ветка, автоматизация, вложения
+state.json          id устройства, хеши выгруженного, конфликты, активность
+repo/               локальная копия приватного репозитория
+conflicts/          удалённые копии, которые разошлись с локальными
+```
+
+## Ограничения
+
+- Сессии-форки (seeded) пропускаются, пока не поддерживается их раскладка
+  унаследованного журнала. Обычные разговоры это не затрагивает.
+- Разошедшиеся истории сохраняются, но не объединяются автоматически. Выберите
+  сторону вручную; удалённая копия остаётся в `conflicts/`.
+- Изменения вложений импортируются только при включённом **Передавать вложения**.
+- Удаление сессии не передаётся на другие компьютеры.
+- Кроссплатформенные чаты, чей путь проекта отсутствует на другом компьютере,
+  прикрепляются к ближайшей рабочей области по имени папки, иначе к первой
+  доступной. Вызовы инструментов внутри таких чатов всё равно ссылаются на
+  старые пути.
+- Выгружаются только ходы, уже сброшенные в журнал сессии; последние секунды
+  живого хода могут подождать следующей синхронизации.
+
+## Разработка
+
+```powershell
+cd "D:\My Drive\DeepSeekHarness\plugins\dsh-chat-sync"
+node --test
+node --check index.js
+node --check client.js
+```
+
+У плагина нет runtime-зависимостей npm. Host-часть использует встроенные модули
+Node и локальный `git`. Браузерная часть — обычный JavaScript, загружаемый через
+`window.__ModuleLoader__`.
+
+## Лицензия
+
+MIT
+
+<details>
+<summary><b>English version</b></summary>
+
+# Chat Sync
+
 A small DeepSeek Harness plugin that carries conversation history between
 computers through one private GitHub repository.
-
-![Chat Sync settings](https://github.com/Eugene-doc/dsh-chat-sync/raw/main/docs/settings.png)
 
 ## What it does
 
@@ -57,7 +302,7 @@ For a local development install, point the plugin manager at this directory:
 dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-chat-sync"
 ```
 
-### Reinstalling Windows or recovering the app
+## Reinstalling Windows or recovering the app
 
 The plugin code is public; the chat data is private. After a clean Windows
 install, run the bootstrap script:
@@ -70,8 +315,29 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 
 It installs DSH, Git and GitHub CLI if needed, signs in, installs the plugin and
 writes the default configuration. Then restart DSH and press **Sync now** in
-**Settings → Chats**. See [the recovery guide](docs/reinstall.md) for the manual
-route, what survives a reinstall, and what must be backed up separately.
+**Settings → Chats**.
+
+### What survives
+
+| Item | Location | Survives a Windows reinstall |
+| --- | --- | --- |
+| Plugin code | Public GitHub repository | Yes |
+| Chat history | Private Git repository | Yes, if the last sync uploaded the changes |
+| Local sessions | `C:\Users\<user>\.dsh\sessions` | No, after C: is formatted |
+| API keys and DSH settings | `C:\Users\<user>\.dsh\.credentials.yaml` and the profile | No, configure them again |
+| Attachments | Locally, plus the repository when enabled | Only when attachment sync was on |
+
+### Before reinstalling
+
+- Make sure you can sign in to the GitHub account `Eugene-doc`, including 2FA or
+  recovery codes.
+- Press **Sync now** and wait for the green state and a commit in the private
+  repository.
+- Copy `C:\Users\<user>\.dsh` to an external disk if you want a local backup.
+- Save API keys and model settings separately; they are not synced.
+- If you need attachments, enable **Include attachments** and let the sync finish.
+
+See [the recovery guide](docs/reinstall.md) for the manual route and more detail.
 
 ## Use
 
@@ -140,7 +406,7 @@ conflicts/          remote copies that diverged
   are attached to the closest workspace by folder name, otherwise to the first
   available workspace. Tool calls inside those chats still reference the old
   paths.
-- Only `turns` already flushed to the session log are exported; the last few
+- Only turns already flushed to the session log are exported; the last few
   seconds of a live turn may wait for the next sync.
 
 ## Development
@@ -159,3 +425,5 @@ the local `git` executable. The browser half is plain JavaScript loaded through
 ## License
 
 MIT
+
+</details>

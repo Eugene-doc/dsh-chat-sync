@@ -95,3 +95,109 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 - Отдельно сохранить API-ключи и настройки моделей: они не синхронизируются.
 - Если нужны вложения, заранее включить **Передавать вложения** и дождаться
   завершения синхронизации.
+
+<details>
+<summary><b>English version</b></summary>
+
+# Reinstalling Windows or recovering the app
+
+The plugin and the chat history are separate things. The plugin can be installed
+again from the public repository, while the history lives in the private
+[`Eugene-doc/dsh-sync`](https://github.com/Eugene-doc/dsh-sync) repository.
+
+## What happens to the data
+
+| Item | Location | Survives a Windows reinstall |
+| --- | --- | --- |
+| Plugin code | GitHub, public repository | Yes |
+| Chat history | Private Git repository | Yes, if the last sync uploaded the changes |
+| Local sessions | `C:\Users\<user>\.dsh\sessions` | No, after C: is formatted |
+| API keys and DSH settings | `C:\Users\<user>\.dsh\.credentials.yaml` and the profile | No, configure them again |
+| Attachments | Locally, plus the repository when enabled | Only when attachment sync was on |
+
+After a clean Windows install the local `.dsh` folder is gone. Everything that
+was uploaded to the private repository is downloaded again by the plugin.
+Anything that did not finish uploading cannot be recovered locally.
+
+## Option 1: one script
+
+Open PowerShell as the user and run:
+
+```powershell
+irm https://raw.githubusercontent.com/Eugene-doc/dsh-chat-sync/main/scripts/install-windows.ps1 `
+  -OutFile "$env:TEMP\chat-sync-install.ps1"
+
+powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
+```
+
+The script:
+
+1. Checks whether DeepSeek Harness is installed and downloads the official
+   installer if needed.
+2. Checks Git and GitHub CLI and installs them through `winget` if needed.
+3. Asks you to sign in to GitHub as `Eugene-doc`.
+4. Checks access to the private `Eugene-doc/dsh-sync` repository.
+5. Installs the plugin from the
+   [v1.0.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.0.0)
+   release.
+6. Writes the default configuration.
+
+Then fully quit and reopen DeepSeek Harness, open **Settings → Chats** and press
+**Sync now**.
+
+If `winget` is unavailable, install Git and GitHub CLI manually from their
+official sites and run the script again.
+
+## Option 2: manual
+
+1. Install [DeepSeek Harness](https://download.deepseek.com/desktop/dsh-latest-windows-x64.exe)
+   and launch it once so the profile is created.
+2. Install [Git](https://git-scm.com/downloads) and
+   [GitHub CLI](https://cli.github.com/).
+3. Sign in to GitHub and configure Git:
+
+   ```powershell
+   gh auth login --hostname github.com --git-protocol https --web
+   gh auth setup-git
+   gh repo view Eugene-doc/dsh-sync --json visibility
+   ```
+
+4. Install the plugin:
+
+   ```powershell
+   & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
+     plugin --profile desktop add `
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.0.0/dsh-chat-sync-1.0.0.tgz"
+   ```
+
+5. Fully quit and reopen DSH.
+6. Open **Settings → Chats** and press **Sync now**. The default repository is
+   `https://github.com/Eugene-doc/dsh-sync.git`, branch `main`.
+
+## If DSH was reinstalled but not removed
+
+The `C:\Users\<user>\.dsh` folder may still exist. Do not delete it before the
+first sync: local chats and plugin settings can help recovery even without a
+network. After installing the plugin, press **Sync now**; the plugin merges the
+local history with the repository.
+
+## If the repository was renamed or deleted
+
+Open **Settings → Chats → Change** and enter the new private repository address.
+If the repository was deleted on GitHub, its contents must be restored from a
+backup: an ordinary local Git clone without a remote does not contain deleted
+history.
+
+## What to prepare in advance
+
+- Access to the GitHub account `Eugene-doc`: password, second factor, or recovery
+  codes.
+- A successful sync before reinstalling: press **Sync now**, wait for the green
+  state and a commit in the private repository.
+- A copy of `C:\Users\<user>\.dsh` on an external disk, if desired.
+- Save API keys and model settings separately; they are not synced.
+- If attachments are needed, enable **Include attachments** in advance and let
+  the sync finish.
+
+</details>
+
