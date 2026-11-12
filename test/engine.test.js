@@ -370,6 +370,77 @@ test('applies the newest remote archive flag and can undo it', async t => {
   assert.deepEqual(fake.registry.archivedSessionIds, [])
 })
 
+test('appends a newer remote tail to an open live session', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-live-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const home = path.join(root, 'home')
+  const id = 'session-dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+  const rows = (text, seq, time) => [
+    {
+      type: 'session',
+      version: 4,
+      id,
+      createdAt: 1700000000000,
+      cwd: 'D:\\work\\demo',
+      isSeeded: false,
+      delegationDepth: 0,
+    },
+    {
+      type: 'user/message',
+      seq: 0,
+      time: 1700000000100,
+      data: { content: [{ type: 'text', text: 'old' }], role: 'user', id: 'u1' },
+    },
+    ...(seq > 0
+      ? [
+          {
+            type: 'user/message',
+            seq,
+            time,
+            data: { content: [{ type: 'text', text }], role: 'user', id: 'u2' },
+          },
+        ]
+      : []),
+  ]
+  const dir = path.join(home, 'sessions', '--D-work-demo--', id)
+  await fs.mkdir(dir, { recursive: true })
+  const localBuffer = encodeRows(rows('ignored', 0, 1700000000200))
+  await fs.writeFile(path.join(dir, 'session.v4.jsonl.zstd'), localBuffer)
+  const { decodeSession } = await import('../lib/session.js')
+  const local = decodeSession(localBuffer, id)
+  local.file = path.join(dir, 'session.v4.jsonl.zstd')
+  const remoteBuffer = encodeRows(rows('fresh', 1, 1700000000200))
+  const remoteSession = decodeSession(remoteBuffer, id)
+  const fake = fakeContext()
+  const live = {
+    events: local.events.slice(),
+    append(type, data) {
+      this.events.push({ type, data })
+    },
+  }
+  const originalGet = fake.ctx.get
+  fake.ctx.get = name =>
+    name === 'sessions'
+      ? { get: () => live, flush: async () => {} }
+      : originalGet(name)
+  const engine = new ChatSyncEngine(fake.ctx, { home, log: () => {} })
+  await engine.init()
+  const warnings = []
+  const outcome = await engine.importOneSession({
+    buffer: remoteBuffer,
+    remoteSession,
+    device: { id: 'other', name: 'Other PC' },
+    localById: new Map([[id, local]]),
+    takenTitles: new Set(),
+    conflicts: [],
+    warnings,
+  })
+  assert.equal(outcome.kind, 'updated')
+  assert.equal(live.events.length, 2)
+  assert.equal(live.events[1].data.content[0].text, 'fresh')
+  assert.equal(warnings.length, 0)
+})
+
 test('fresh remote version replaces a diverged local session', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-newest-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))

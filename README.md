@@ -28,6 +28,9 @@
 - При конфликте одной и той же сессии оставляет самую свежую версию и заменяет
   старую. Заменённая копия сохраняется в `conflicts/`, поэтому данные не теряются
   безвозвратно.
+- **Обновляет открытый чат без закрытия.** Если локальная копия — это начало
+  более свежей удалённой, недостающие сообщения добавляются прямо в открытую
+  сессию. Закрывать чат нужно только при реально разошедшихся ветках.
 - По желанию передаёт вложения из чатов.
 - Даёт ассистенту инструмент `chat_sync`, чтобы узнать статус или запустить
   синхронизацию.
@@ -61,7 +64,7 @@
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.2/dsh-chat-sync-1.4.2.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.3/dsh-chat-sync-1.4.3.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -84,14 +87,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > установка» или скрипт восстановления ниже. Режим `file:` нужен только для
 > разработки на компьютере, где лежит папка с исходниками.
 
-## Обновление до 1.4.2
+## Обновление до 1.4.3
 
-На каждом компьютере, где стоит 1.0.0–1.4.1, выполните:
+На каждом компьютере, где стоит 1.0.0–1.4.2, выполните:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.2/dsh-chat-sync-1.4.2.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.3/dsh-chat-sync-1.4.3.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -138,7 +141,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. Попросит войти в GitHub как `Eugene-doc`.
 4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
 5. Установит плагин из релиза
-   [v1.4.2](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.4.2).
+   [v1.4.3](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.4.3).
 6. Запишет конфигурацию по умолчанию.
 
 После этого полностью закройте и откройте DeepSeek Harness, зайдите в
@@ -166,7 +169,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.2/dsh-chat-sync-1.4.2.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.3/dsh-chat-sync-1.4.3.tgz"
    ```
 
 5. Полностью закройте и снова откройте DSH.
@@ -320,6 +323,9 @@ computers through one private GitHub repository.
   unarchiving is propagated too.
 - Resolves a divergent copy of the same session by keeping the newest version;
   the replaced copy stays in `conflicts/` as a backup.
+- **Updates an open chat without closing it.** When the local copy is a prefix of
+  the newer remote one, missing messages are appended to the live session. Closing
+  is only required when the two branches genuinely diverged.
 - Optionally carries content-addressed chat attachments.
 - Exposes a `chat_sync` tool so the assistant can report status or run a sync.
 
@@ -351,7 +357,7 @@ computer or recover it after a reinstall, use the released package:
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.2/dsh-chat-sync-1.4.2.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.3/dsh-chat-sync-1.4.3.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -373,14 +379,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > or the recovery script below. The `file:` mode is only for development on the
 > computer that holds the source folder.
 
-## Updating to 1.4.2
+## Updating to 1.4.3
 
-On every computer that still runs 1.0.0–1.4.1:
+On every computer that still runs 1.0.0–1.4.2:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.2/dsh-chat-sync-1.4.2.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.3/dsh-chat-sync-1.4.3.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
