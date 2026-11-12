@@ -1,6 +1,6 @@
 {
   "name": "dsh-chat-sync",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "private": true,
   "type": "module",
   "description": "Carries chat history between computers through a private GitHub repository.",
@@ -40,9 +40,8 @@
     "dsh": ">=0.2.0-rc.1",
     "node": ">=24"
   },
+  "license": "MIT",
   "scripts": {
     "test": "node --test"
-  },
-  "license": "MIT"
+  }
 }
-

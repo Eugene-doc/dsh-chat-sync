@@ -68,7 +68,7 @@
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.1/dsh-chat-sync-1.5.1.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -91,14 +91,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > установка» или скрипт восстановления ниже. Режим `file:` нужен только для
 > разработки на компьютере, где лежит папка с исходниками.
 
-## Обновление до 1.5.1
+## Обновление до 1.5.2
 
-На каждом компьютере, где стоит 1.0.0–1.5.0, выполните:
+На каждом компьютере, где стоит 1.0.0–1.5.1, выполните:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.1/dsh-chat-sync-1.5.1.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -145,7 +145,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. Попросит войти в GitHub как `Eugene-doc`.
 4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
 5. Установит плагин из релиза
-   [v1.5.1](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.5.1).
+   [v1.5.2](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.5.2).
 6. Запишет конфигурацию по умолчанию.
 
 После этого полностью закройте и откройте DeepSeek Harness, зайдите в
@@ -173,7 +173,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.1/dsh-chat-sync-1.5.1.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
    ```
 
 5. Полностью закройте и снова откройте DSH.
@@ -365,7 +365,7 @@ computer or recover it after a reinstall, use the released package:
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.1/dsh-chat-sync-1.5.1.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -387,14 +387,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > or the recovery script below. The `file:` mode is only for development on the
 > computer that holds the source folder.
 
-## Updating to 1.5.1
+## Updating to 1.5.2
 
-On every computer that still runs 1.0.0–1.5.0:
+On every computer that still runs 1.0.0–1.5.1:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.1/dsh-chat-sync-1.5.1.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press

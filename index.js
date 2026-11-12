@@ -1,4 +1,6 @@
-import { spawn } from 'node:child_process'
+import { execFile } from 'node:child_process'
+import { promises as fs } from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 
 import { ChatSyncEngine } from './lib/engine.js'
@@ -155,32 +157,84 @@ function registerTools(ctx, engine, log) {
   }
 }
 
+/** Run one short-lived command and collect its failure for the caller. */
+function runFile(file, args) {
+  return new Promise((resolve, reject) => {
+    execFile(file, args, { windowsHide: true, timeout: 20000 }, (error, stdout, stderr) => {
+      if (error) {
+        reject(Object.assign(error, { stdout, stderr }))
+        return
+      }
+      resolve({ stdout, stderr })
+    })
+  })
+}
+
 /**
- * Restart the desktop app after the current request has been answered. The
- * detached helper waits, closes every DSH process, then starts the same exe.
+ * Restart the desktop app without relying on a child that dies with Electron.
+ * A short PowerShell bootstrap asks WMI to create a detached restart script.
+ * The WMI process runs in the user's session but outside the app's job object,
+ * so it can stop every DSH process and launch the same executable afterwards.
  */
-function scheduleRestart() {
+async function scheduleRestart(log) {
   if (process.platform !== 'win32') return false
   const exe = process.execPath
   if (!exe || path.extname(exe).toLowerCase() !== '.exe') return false
-  const processName = path.basename(exe, path.extname(exe))
-  if (!processName) return false
+  const systemRoot = process.env.SystemRoot || 'C:\\Windows'
+  const powershell = path.join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe')
+  if (!(await fs.stat(powershell).catch(() => null))) return false
+
+  const directory = path.join(os.homedir(), '.dsh', 'chat-sync', 'restart')
+  const restartPath = path.join(directory, 'restart.ps1')
+  const bootstrapPath = path.join(directory, 'bootstrap.ps1')
+  const logPath = path.join(directory, 'restart.log')
+  const appName = path.basename(exe)
   const quote = value => String(value).replace(/'/g, "''")
-  const script = [
-    'Start-Sleep -Milliseconds 1500',
-    `Get-Process -Name '${quote(processName)}' -ErrorAction SilentlyContinue | Stop-Process -Force`,
-    'Start-Sleep -Seconds 2',
-    `Start-Process -FilePath '${quote(exe)}' -WorkingDirectory '${quote(path.dirname(exe))}'`,
-  ].join('; ')
+
+  const restartScript = [
+    "$ErrorActionPreference = 'Stop'",
+    `$log = '${quote(logPath)}'`,
+    "function Write-Log([string]$m) { Add-Content -LiteralPath $log -Value ((Get-Date).ToString('s') + ' ' + $m) -Encoding utf8 }",
+    'try {',
+    "  Write-Log 'restart requested'",
+    '  Start-Sleep -Seconds 2',
+    `  Write-Log 'stopping ${quote(appName)}'`,
+    `  & "$env:SystemRoot\\System32\\taskkill.exe" /F /IM "${quote(appName)}" /T | Out-Null`,
+    '  Start-Sleep -Seconds 3',
+    `  Write-Log 'starting ${quote(exe)}'`,
+    `  Start-Process -FilePath '${quote(exe)}' -WorkingDirectory '${quote(path.dirname(exe))}'`,
+    "  Write-Log 'started'",
+    '} catch {',
+    '  Write-Log ("error: " + $_.Exception.Message)',
+    '  exit 1',
+    '}',
+  ].join('\n')
+
+  const bootstrapScript = [
+    "$ErrorActionPreference = 'Stop'",
+    `$ps = '${quote(powershell)}'`,
+    `$file = '${quote(restartPath)}'`,
+    '$cmd = \'"\' + $ps + \'" -NoProfile -NonInteractive -ExecutionPolicy Bypass -WindowStyle Hidden -File "\' + $file + \'"\'',
+    '$result = Invoke-CimMethod -ClassName Win32_Process -MethodName Create -Arguments @{ CommandLine = $cmd }',
+    'if ($result.ReturnValue -ne 0) { exit 1 }',
+  ].join('\n')
+
   try {
-    const helper = spawn(
-      'powershell.exe',
-      ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command', script],
-      { detached: true, stdio: 'ignore', windowsHide: true },
-    )
-    helper.unref()
-    return true
-  } catch {
+    await fs.mkdir(directory, { recursive: true })
+    await fs.writeFile(restartPath, restartScript, 'utf8')
+    await fs.writeFile(bootstrapPath, bootstrapScript, 'utf8')
+    await runFile(powershell, [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      bootstrapPath,
+    ])
+    log?.(`[chat-sync] restart scheduled via WMI; log: ${logPath}`)
+    return 'wmi'
+  } catch (error) {
+    log?.(`[chat-sync] restart bootstrap failed: ${error?.message || error}`)
     return false
   }
 }
@@ -201,7 +255,9 @@ export async function apply(ctx) {
     const route = url.pathname.slice(API_PREFIX.length) || '/'
     try {
       if (req.method === 'GET' && route === '/status') {
-        json(res, 200, await engine.getStatus())
+        const status = await engine.getStatus()
+        status.plugin.restartMode = process.platform === 'win32' ? 'wmi' : 'unsupported'
+        json(res, 200, status)
         return
       }
       if (req.method === 'GET' && route === '/config') {
@@ -220,14 +276,15 @@ export async function apply(ctx) {
           json(res, 500, { ok: false, error: result.error || 'Sync failed.' })
           return
         }
-        if (!scheduleRestart()) {
+        const mode = await scheduleRestart(log)
+        if (!mode) {
           json(res, 501, {
             ok: false,
-            error: 'Automatic restart is only available in the Windows desktop app.',
+            error: 'Could not start the Windows restart helper. Close DSH manually and reopen it.',
           })
           return
         }
-        json(res, 200, { ok: true, result, restarting: true })
+        json(res, 200, { ok: true, result, restarting: true, mode })
         return
       }
       if (req.method === 'POST' && route === '/config') {

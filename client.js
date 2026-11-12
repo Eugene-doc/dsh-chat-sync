@@ -16,6 +16,7 @@ window.__ModuleLoader__.load({
         syncRestart: 'Sync and restart DSH',
         syncRestartBusy: 'Syncing and restarting…',
         syncRestartHint: 'Syncs chats and fully restarts DeepSeek Harness.',
+        restartFailed: 'The restart did not happen. Close DeepSeek Harness manually and open it again.',
         topSync: 'Sync now',
         topRestart: 'Sync and restart DSH',
         topStatusOk: 'Last sync succeeded',
@@ -133,6 +134,7 @@ window.__ModuleLoader__.load({
         syncRestart: 'Синхронизировать и перезапустить DSH',
         syncRestartBusy: 'Синхронизирую и перезапускаю…',
         syncRestartHint: 'Синхронизирует чаты и полностью перезапускает DeepSeek Harness.',
+        restartFailed: 'Перезапуск не произошёл. Закройте DeepSeek Harness вручную и откройте снова.',
         topSync: 'Синхронизировать',
         topRestart: 'Синхронизировать и перезапустить DSH',
         topStatusOk: 'Последняя синхронизация успешна',
@@ -400,9 +402,10 @@ window.__ModuleLoader__.load({
       }
       .cs-topbtn:hover:not(:disabled) { background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }
       .cs-topbtn:disabled { opacity: 0.45; cursor: default; }
-      .cs-topbtn.danger { color: #ff7b80; }
-      .cs-topbtn.danger:hover:not(:disabled) { background: rgba(229, 72, 77, 0.16); color: #ffb1b4; }
+      .cs-topbtn.danger { color: #ff6b70; background: rgba(229, 72, 77, 0.10); }
+      .cs-topbtn.danger:hover:not(:disabled) { background: rgba(229, 72, 77, 0.22); color: #ffb1b4; }
       .cs-status-track {
+        display: inline-block; flex: 0 0 38px;
         width: 38px; height: 5px; border-radius: 999px; overflow: hidden;
         background: var(--dsw-alias-bg-module-platform);
         border: 1px solid var(--dsw-alias-border-l3);
@@ -685,6 +688,30 @@ window.__ModuleLoader__.load({
       return payload
     }
 
+    const HEADER_CSS = `
+      .cs-topstatus { display: flex; align-items: center; gap: 6px; height: 28px; padding: 0 4px; }
+      .cs-topbtn {
+        display: inline-grid; place-items: center; width: 27px; height: 27px;
+        padding: 0; border: 0; border-radius: 8px; background: transparent;
+        color: var(--dsw-alias-label-secondary); cursor: pointer;
+      }
+      .cs-topbtn:hover:not(:disabled) { background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }
+      .cs-topbtn:disabled { opacity: 0.45; cursor: default; }
+      .cs-topbtn.danger { color: #ff6b70; background: rgba(229, 72, 77, 0.10); }
+      .cs-topbtn.danger:hover:not(:disabled) { background: rgba(229, 72, 77, 0.22); color: #ffb1b4; }
+      .cs-status-track {
+        display: inline-block; flex: 0 0 38px; width: 38px; height: 5px;
+        border-radius: 999px; overflow: hidden;
+        background: var(--dsw-alias-bg-module-platform);
+        border: 1px solid var(--dsw-alias-border-l3);
+      }
+      .cs-status-fill { display: block; height: 100%; width: 100%; background: var(--dsw-alias-label-caption); transition: width 180ms ease; }
+      .cs-status-track.ok .cs-status-fill { background: #3fb950; }
+      .cs-status-track.error .cs-status-fill { background: #e5484d; width: 100%; }
+      .cs-status-track.running .cs-status-fill { width: 42%; background: #d29922; animation: cs-status-slide 1.1s ease-in-out infinite alternate; }
+      @keyframes cs-status-slide { from { transform: translateX(-18%); } to { transform: translateX(150%); } }
+    `
+
     function HeaderStatus({ t }) {
       const [status, setStatus] = React.useState(null)
       const [busy, setBusy] = React.useState(false)
@@ -729,13 +756,18 @@ window.__ModuleLoader__.load({
         try {
           await request('/sync-restart', { method: 'POST', body: '{}' })
           await refreshStatus()
+          window.setTimeout(() => {
+            if (!alive.current) return
+            setError(t('restartFailed'))
+            setBusy(false)
+          }, 10000)
         } catch (failure) {
           if (alive.current) {
             setError(String(failure?.message || failure))
             setBusy(false)
           }
         }
-      }, [busy, refreshStatus])
+      }, [busy, refreshStatus, t])
 
       const running = busy || Boolean(status?.sync?.running)
       const last = status?.last
@@ -850,11 +882,16 @@ window.__ModuleLoader__.load({
         setActionError('')
         try {
           await request('/sync-restart', { method: 'POST', body: '{}' })
+          window.setTimeout(() => {
+            if (!alive.current) return
+            setActionError(t('restartFailed'))
+            setBusy(false)
+          }, 10000)
         } catch (error) {
           setActionError(String(error?.message || error))
           if (alive.current) setBusy(false)
         }
-      }, [busy])
+      }, [busy, t])
 
       const patchConfig = React.useCallback(
         async (patch, key) => {
@@ -1713,6 +1750,16 @@ window.__ModuleLoader__.load({
           }
         } catch (error) {
           console.warn('[chat-sync] locale registration failed', error)
+        }
+
+        if (typeof document !== 'undefined') {
+          const previous = document.getElementById('chat-sync-header-css')
+          if (previous) previous.remove()
+          const style = document.createElement('style')
+          style.id = 'chat-sync-header-css'
+          style.textContent = HEADER_CSS
+          document.head.appendChild(style)
+          ctx.effect(() => () => style.remove(), 'chat-sync: header styles')
         }
 
         ctx.slots.inject('settings.section.icon', () =>
