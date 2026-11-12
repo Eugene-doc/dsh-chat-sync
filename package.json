@@ -1,6 +1,6 @@
 {
   "name": "dsh-chat-sync",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "private": true,
   "type": "module",
   "description": "Carries chat history between computers through a private GitHub repository.",

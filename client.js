@@ -365,6 +365,7 @@ window.__ModuleLoader__.load({
       .cs-title { margin: 2px 0 1px; font-size: 22px; line-height: 30px; font-weight: 600; letter-spacing: -.012em; }
       .cs-sub { max-width: 520px; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }
       .cs-hero-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding-top: 2px; }
+      .cs-version { color: var(--dsw-alias-label-caption); font-size: 11px; line-height: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
       .cs-btn {
         display: inline-flex; align-items: center; justify-content: center; gap: 6px;
         height: 34px; padding: 0 13px; border-radius: 10px; border: 1px solid var(--dsw-alias-border-l4);
@@ -869,6 +870,7 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'cs-hero-actions' },
+            h('span', { className: 'cs-version', title: t('title') }, `v${status.plugin?.version || '1.4.2'}`),
             h(
               'button',
               {
