@@ -1,3 +1,6 @@
+import { spawn } from 'node:child_process'
+import path from 'node:path'
+
 import { ChatSyncEngine } from './lib/engine.js'
 import { parseRemote } from './lib/util.js'
 
@@ -152,6 +155,36 @@ function registerTools(ctx, engine, log) {
   }
 }
 
+/**
+ * Restart the desktop app after the current request has been answered. The
+ * detached helper waits, closes every DSH process, then starts the same exe.
+ */
+function scheduleRestart() {
+  if (process.platform !== 'win32') return false
+  const exe = process.execPath
+  if (!exe || path.extname(exe).toLowerCase() !== '.exe') return false
+  const processName = path.basename(exe, path.extname(exe))
+  if (!processName) return false
+  const quote = value => String(value).replace(/'/g, "''")
+  const script = [
+    'Start-Sleep -Milliseconds 1500',
+    `Get-Process -Name '${quote(processName)}' -ErrorAction SilentlyContinue | Stop-Process -Force`,
+    'Start-Sleep -Seconds 2',
+    `Start-Process -FilePath '${quote(exe)}' -WorkingDirectory '${quote(path.dirname(exe))}'`,
+  ].join('; ')
+  try {
+    const helper = spawn(
+      'powershell.exe',
+      ['-NoProfile', '-NonInteractive', '-WindowStyle', 'Hidden', '-Command', script],
+      { detached: true, stdio: 'ignore', windowsHide: true },
+    )
+    helper.unref()
+    return true
+  } catch {
+    return false
+  }
+}
+
 /** Host half: Git relay, HTTP API, auto-sync timer and the read/write agent tool. */
 export async function apply(ctx) {
   const log = makeLogger(ctx)
@@ -179,6 +212,22 @@ export async function apply(ctx) {
       if (req.method === 'POST' && route === '/sync') {
         const started = await engine.startSync()
         json(res, started.started ? 202 : 200, { ok: true, ...started })
+        return
+      }
+      if (req.method === 'POST' && route === '/sync-restart') {
+        const result = await engine.runSync()
+        if (!result.ok) {
+          json(res, 500, { ok: false, error: result.error || 'Sync failed.' })
+          return
+        }
+        if (!scheduleRestart()) {
+          json(res, 501, {
+            ok: false,
+            error: 'Automatic restart is only available in the Windows desktop app.',
+          })
+          return
+        }
+        json(res, 200, { ok: true, result, restarting: true })
         return
       }
       if (req.method === 'POST' && route === '/config') {

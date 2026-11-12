@@ -9,7 +9,7 @@
 
 $ErrorActionPreference = 'Stop'
 
-$ReleaseUrl = 'https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.4/dsh-chat-sync-1.4.4.tgz'
+$ReleaseUrl = 'https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.0/dsh-chat-sync-1.5.0.tgz'
 $Owner = 'Eugene-doc'
 $RelayRepo = 'Eugene-doc/dsh-sync'
 

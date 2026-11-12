@@ -13,6 +13,15 @@ window.__ModuleLoader__.load({
         subtitle: 'Pick up the same conversation on any computer. History travels through your private GitHub repository.',
         syncNow: 'Sync now',
         syncing: 'Syncing…',
+        syncRestart: 'Sync and restart DSH',
+        syncRestartBusy: 'Syncing and restarting…',
+        syncRestartHint: 'Syncs chats and fully restarts DeepSeek Harness.',
+        topSync: 'Sync now',
+        topRestart: 'Sync and restart DSH',
+        topStatusOk: 'Last sync succeeded',
+        topStatusError: 'Sync failed',
+        topStatusRunning: 'Sync in progress',
+        topStatusNever: 'No sync yet',
         openRepo: 'Open repository',
         allCaught: 'All caught up',
         needsAttention: 'Needs attention',
@@ -121,6 +130,15 @@ window.__ModuleLoader__.load({
         subtitle: 'Продолжайте один и тот же разговор на любом компьютере. История передаётся через ваш приватный репозиторий GitHub.',
         syncNow: 'Синхронизировать',
         syncing: 'Синхронизация…',
+        syncRestart: 'Синхронизировать и перезапустить DSH',
+        syncRestartBusy: 'Синхронизирую и перезапускаю…',
+        syncRestartHint: 'Синхронизирует чаты и полностью перезапускает DeepSeek Harness.',
+        topSync: 'Синхронизировать',
+        topRestart: 'Синхронизировать и перезапустить DSH',
+        topStatusOk: 'Последняя синхронизация успешна',
+        topStatusError: 'Ошибка синхронизации',
+        topStatusRunning: 'Синхронизация выполняется',
+        topStatusNever: 'Синхронизация ещё не выполнялась',
         openRepo: 'Открыть репозиторий',
         allCaught: 'Всё синхронизировано',
         needsAttention: 'Нужно внимание',
@@ -365,7 +383,35 @@ window.__ModuleLoader__.load({
       .cs-title { margin: 2px 0 1px; font-size: 22px; line-height: 30px; font-weight: 600; letter-spacing: -.012em; }
       .cs-sub { max-width: 520px; color: var(--dsw-alias-label-secondary); font-size: 13px; line-height: 20px; }
       .cs-hero-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; padding-top: 2px; }
+      .cs-hero-stack { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
       .cs-version { color: var(--dsw-alias-label-caption); font-size: 11px; line-height: 16px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .cs-btn-restart {
+        height: 30px; padding: 0 11px; border-radius: 9px;
+        border: 1px solid rgba(229, 72, 77, 0.48);
+        background: rgba(229, 72, 77, 0.10);
+        color: #ff9a9e; font-size: 12px;
+      }
+      .cs-btn-restart:hover:not(:disabled) { background: rgba(229, 72, 77, 0.18); color: #ffc2c4; }
+      .cs-topstatus { display: flex; align-items: center; gap: 6px; padding: 0 4px; }
+      .cs-topbtn {
+        display: inline-grid; place-items: center; width: 27px; height: 27px;
+        padding: 0; border: 0; border-radius: 8px; background: transparent;
+        color: var(--dsw-alias-label-secondary); cursor: pointer;
+      }
+      .cs-topbtn:hover:not(:disabled) { background: var(--dsw-alias-bg-module-platform); color: var(--dsw-alias-label-primary); }
+      .cs-topbtn:disabled { opacity: 0.45; cursor: default; }
+      .cs-topbtn.danger { color: #ff7b80; }
+      .cs-topbtn.danger:hover:not(:disabled) { background: rgba(229, 72, 77, 0.16); color: #ffb1b4; }
+      .cs-status-track {
+        width: 38px; height: 5px; border-radius: 999px; overflow: hidden;
+        background: var(--dsw-alias-bg-module-platform);
+        border: 1px solid var(--dsw-alias-border-l3);
+      }
+      .cs-status-fill { display: block; height: 100%; width: 100%; background: var(--dsw-alias-label-caption); transition: width 180ms ease; }
+      .cs-status-track.ok .cs-status-fill { background: #3fb950; }
+      .cs-status-track.error .cs-status-fill { background: #e5484d; width: 100%; }
+      .cs-status-track.running .cs-status-fill { width: 42%; background: #d29922; animation: cs-status-slide 1.1s ease-in-out infinite alternate; }
+      @keyframes cs-status-slide { from { transform: translateX(-18%); } to { transform: translateX(150%); } }
       .cs-btn {
         display: inline-flex; align-items: center; justify-content: center; gap: 6px;
         height: 34px; padding: 0 13px; border-radius: 10px; border: 1px solid var(--dsw-alias-border-l4);
@@ -495,6 +541,7 @@ window.__ModuleLoader__.load({
       @media (max-width: 680px) {
         .cs-hero { flex-wrap: wrap; }
         .cs-hero-actions { margin-left: 0; width: 100%; justify-content: flex-start; }
+        .cs-hero-stack { align-items: flex-start; width: 100%; }
         .cs-btn-primary { flex: 0 1 auto; }
         .cs-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       }
@@ -569,6 +616,10 @@ window.__ModuleLoader__.load({
           h('path', { key: 'c', d: 'M4 13a8 8 0 0 0 14.7 3L21 13' }),
           h('path', { key: 'd', d: 'M21 20v-7h-7' }),
         ],
+        power: [
+          h('path', { key: 'a', d: 'M12 3v9' }),
+          h('path', { key: 'b', d: 'M6.3 6.3a8 8 0 1 0 11.4 0' }),
+        ],
         clock: [
           h('circle', { key: 'a', cx: 12, cy: 12, r: 9 }),
           h('path', { key: 'b', d: 'M12 7v5l3 2' }),
@@ -634,6 +685,105 @@ window.__ModuleLoader__.load({
       return payload
     }
 
+    function HeaderStatus({ t }) {
+      const [status, setStatus] = React.useState(null)
+      const [busy, setBusy] = React.useState(false)
+      const [error, setError] = React.useState('')
+      const alive = React.useRef(true)
+
+      const refreshStatus = React.useCallback(async () => {
+        try {
+          const next = await request('/status')
+          if (alive.current) setStatus(next)
+        } catch {}
+      }, [])
+
+      React.useEffect(() => {
+        alive.current = true
+        void refreshStatus()
+        const timer = window.setInterval(() => void refreshStatus(), 4000)
+        return () => {
+          alive.current = false
+          window.clearInterval(timer)
+        }
+      }, [refreshStatus])
+
+      const syncNow = React.useCallback(async () => {
+        if (busy) return
+        setBusy(true)
+        setError('')
+        try {
+          await request('/sync', { method: 'POST', body: '{}' })
+          await refreshStatus()
+        } catch (failure) {
+          if (alive.current) setError(String(failure?.message || failure))
+        } finally {
+          if (alive.current) setBusy(false)
+        }
+      }, [busy, refreshStatus])
+
+      const syncRestart = React.useCallback(async () => {
+        if (busy) return
+        setBusy(true)
+        setError('')
+        try {
+          await request('/sync-restart', { method: 'POST', body: '{}' })
+          await refreshStatus()
+        } catch (failure) {
+          if (alive.current) {
+            setError(String(failure?.message || failure))
+            setBusy(false)
+          }
+        }
+      }, [busy, refreshStatus])
+
+      const running = busy || Boolean(status?.sync?.running)
+      const last = status?.last
+      const tone = running ? 'running' : last?.ok === false || error ? 'error' : last ? 'ok' : 'idle'
+      const label = running
+        ? t('topStatusRunning')
+        : error || last?.ok === false
+          ? t('topStatusError')
+          : last
+            ? t('topStatusOk')
+            : t('topStatusNever')
+      const detail = error || label
+
+      return h(
+        'div',
+        { className: 'cs-topstatus' },
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'cs-topbtn',
+            title: t('topSync'),
+            'aria-label': t('topSync'),
+            disabled: busy,
+            onClick: () => void syncNow(),
+          },
+          h(Icon, { name: running ? 'refresh' : 'sync', size: 15 }),
+        ),
+        h(
+          'span',
+          { className: `cs-status-track ${tone}`, title: detail, 'aria-label': detail, role: 'img' },
+          h('span', { className: 'cs-status-fill' }),
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
+            className: 'cs-topbtn danger',
+            title: busy ? t('syncRestartBusy') : t('topRestart'),
+            'aria-label': t('topRestart'),
+            disabled: busy,
+            onClick: () => void syncRestart(),
+          },
+          h(Icon, { name: 'power', size: 15 }),
+        ),
+      )
+    }
+
     function Section({ ctx }) {
       const lang = useLocale(ctx)
       const t = React.useCallback((key, params) => translate(lang, key, params), [lang])
@@ -693,6 +843,18 @@ window.__ModuleLoader__.load({
           if (alive.current) setBusy(false)
         }
       }, [busy, refresh])
+
+      const restartSync = React.useCallback(async () => {
+        if (busy) return
+        setBusy(true)
+        setActionError('')
+        try {
+          await request('/sync-restart', { method: 'POST', body: '{}' })
+        } catch (error) {
+          setActionError(String(error?.message || error))
+          if (alive.current) setBusy(false)
+        }
+      }, [busy])
 
       const patchConfig = React.useCallback(
         async (patch, key) => {
@@ -874,17 +1036,33 @@ window.__ModuleLoader__.load({
           h(
             'div',
             { className: 'cs-hero-actions' },
-            h('span', { className: 'cs-version', title: t('title') }, `v${status.plugin?.version || '1.4.2'}`),
+            h('span', { className: 'cs-version', title: t('title') }, `v${status.plugin?.version || '1.4.4'}`),
             h(
-              'button',
-              {
-                type: 'button',
-                className: 'cs-btn cs-btn-primary',
-                disabled: running || busy,
-                onClick: () => void runSync(),
-              },
-              h(Icon, { name: running ? 'refresh' : 'sync', size: 15 }),
-              running ? t('syncing') : t('syncNow'),
+              'div',
+              { className: 'cs-hero-stack' },
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'cs-btn cs-btn-primary',
+                  disabled: running || busy,
+                  onClick: () => void runSync(),
+                },
+                h(Icon, { name: running ? 'refresh' : 'sync', size: 15 }),
+                running ? t('syncing') : t('syncNow'),
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'cs-btn cs-btn-restart',
+                  disabled: running || busy,
+                  title: t('syncRestartHint'),
+                  onClick: () => void restartSync(),
+                },
+                h(Icon, { name: 'power', size: 14 }),
+                busy ? t('syncRestartBusy') : t('syncRestart'),
+              ),
             ),
           ),
         ),
@@ -1561,6 +1739,17 @@ window.__ModuleLoader__.load({
               label: () => t('nav'),
             },
             props => h(Section, { ...props, ctx }),
+          ),
+        )
+
+        ctx.slots.inject('conversation.session.header.utilities', () =>
+          ctx.slots.register(
+            {
+              name: 'conversation.session.header.utilities',
+              id: 'chat-sync-status',
+              order: 40,
+            },
+            () => h(HeaderStatus, { t }),
           ),
         )
       },
