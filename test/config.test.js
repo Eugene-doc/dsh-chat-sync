@@ -32,9 +32,12 @@ test('configuration validation refuses unsafe branches and unknown intervals', (
   assert.equal(validateConfigPatch(base, { addComputerName: 'yes' }).ok, false)
   assert.equal(validateConfigPatch(base, { syncArchive: false }).config.syncArchive, false)
   assert.equal(validateConfigPatch(base, { syncArchive: 'yes' }).ok, false)
+  assert.equal(validateConfigPatch(base, { resolveConflicts: false }).config.resolveConflicts, false)
+  assert.equal(validateConfigPatch(base, { resolveConflicts: 'yes' }).ok, false)
 })
 
-test('computer-name disambiguation and archive sync are on by default', () => {
+test('title, archive and conflict defaults are enabled', () => {
   assert.equal(defaultConfig().addComputerName, true)
   assert.equal(defaultConfig().syncArchive, true)
+  assert.equal(defaultConfig().resolveConflicts, true)
 })

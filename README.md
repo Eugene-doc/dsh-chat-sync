@@ -25,6 +25,9 @@
   по подходящим рабочим областям. Содержимое чатов и архивные флаги не меняются.
 - Синхронизирует архив: если чат архивирован на одном ПК, он остаётся скрытым и
   на остальных. Снятие с архива тоже передаётся.
+- При конфликте одной и той же сессии оставляет самую свежую версию и заменяет
+  старую. Заменённая копия сохраняется в `conflicts/`, поэтому данные не теряются
+  безвозвратно.
 - По желанию передаёт вложения из чатов.
 - Даёт ассистенту инструмент `chat_sync`, чтобы узнать статус или запустить
   синхронизацию.
@@ -58,7 +61,7 @@
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.0/dsh-chat-sync-1.4.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -81,14 +84,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > установка» или скрипт восстановления ниже. Режим `file:` нужен только для
 > разработки на компьютере, где лежит папка с исходниками.
 
-## Обновление до 1.3.0
+## Обновление до 1.4.0
 
-На каждом компьютере, где стоит 1.0.0, 1.1.0 или 1.2.0, выполните:
+На каждом компьютере, где стоит 1.0.0–1.3.0, выполните:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.0/dsh-chat-sync-1.4.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -135,7 +138,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. Попросит войти в GitHub как `Eugene-doc`.
 4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
 5. Установит плагин из релиза
-   [v1.3.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.3.0).
+   [v1.4.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.4.0).
 6. Запишет конфигурацию по умолчанию.
 
 После этого полностью закройте и откройте DeepSeek Harness, зайдите в
@@ -163,7 +166,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.0/dsh-chat-sync-1.4.0.tgz"
    ```
 
 5. Полностью закройте и снова откройте DSH.
@@ -205,6 +208,11 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
   области, не снимая архив. Сообщения и файлы сессий не меняются.
 - **Синхронизировать архив** включено по умолчанию. Архивирование и снятие с
   архива передаются на другие компьютеры; архивные чаты остаются скрытыми.
+- **Оставлять свежую версию при конфликте** включено по умолчанию. Если одна и
+  та же сессия изменилась на двух ПК, более свежий журнал полностью заменяет
+  старый. Старая версия остаётся в `conflicts/`.
+  Это не объединяет два **разных** чата с одинаковым названием — они остаются
+  разными сессиями с припиской компьютера.
 - **Изменить** переключает на другой приватный репозиторий или ветку. Локальная
   копия пересоберётся при следующей синхронизации; локальные чаты не затрагиваются.
 - Новые чаты с другого компьютера прикрепляются к рабочей области с тем же путём,
@@ -224,7 +232,7 @@ DSH хранит каждый чат как append-only JSONL-журнал, сж
 | совпадают | ничего делать не нужно |
 | локальная — точный префикс | удалённый хвост дописывается через `sessionPersistence` |
 | удалённая — точный префикс | локальная версия сохраняется и загружается в этом запуске |
-| истории расходятся | локальная версия сохраняется, удалённые байты — в копии конфликта |
+| истории расходятся | более свежая версия заменяет старую; заменённая копия — в `conflicts/` |
 
 Чат, который сейчас открыт и принадлежит локальному writer, откладывается до
 следующей синхронизации. Частично записанный журнал пропускается, а не
@@ -310,6 +318,8 @@ computers through one private GitHub repository.
   workspaces without changing archive flags. Chat content is not changed.
 - Syncs the archive: a chat archived on one computer stays hidden on the others;
   unarchiving is propagated too.
+- Resolves a divergent copy of the same session by keeping the newest version;
+  the replaced copy stays in `conflicts/` as a backup.
 - Optionally carries content-addressed chat attachments.
 - Exposes a `chat_sync` tool so the assistant can report status or run a sync.
 
@@ -341,7 +351,7 @@ computer or recover it after a reinstall, use the released package:
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.0/dsh-chat-sync-1.4.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -363,14 +373,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > or the recovery script below. The `file:` mode is only for development on the
 > computer that holds the source folder.
 
-## Updating to 1.3.0
+## Updating to 1.4.0
 
-On every computer that still runs 1.0.0, 1.1.0 or 1.2.0:
+On every computer that still runs 1.0.0–1.3.0:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.4.0/dsh-chat-sync-1.4.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -431,6 +441,11 @@ See [the recovery guide](docs/reinstall.md) for the manual route and more detail
   archive flags. Messages and session files are not changed.
 - **Sync the archive** is on by default. Archiving and unarchiving are propagated
   to the other computers; archived chats stay hidden.
+- **Keep the newest version on conflict** is on by default. If the same session
+  changed on two PCs, the newer log fully replaces the older one; the replaced
+  copy stays in `conflicts/`. This does not merge two **different** chats that
+  happen to have the same title — they remain separate sessions with a computer
+  suffix.
 - **Change** switches to another private GitHub repository or branch. The local
   checkout is rebuilt on the next sync; local chats are untouched.
 - New chats imported from another computer are attached to a workspace with the

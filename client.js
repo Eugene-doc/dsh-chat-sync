@@ -67,6 +67,9 @@ window.__ModuleLoader__.load({
         syncArchive: 'Sync the archive',
         syncArchiveDesc: 'Archived chats stay hidden on every computer. Unarchiving a chat also syncs.',
         archiveActivity: 'Archived: {archived}; restored: {unarchived}',
+        resolveConflicts: 'Keep the newest version on conflict',
+        resolveConflictsDesc: 'When the same chat changed on two computers, the newer version replaces the older one. The replaced copy is kept in the conflicts folder.',
+        replaced: '{count} replaced',
         activity: 'Activity',
         activityDesc: 'What happened recently.',
         noActivity: 'No sync activity yet.',
@@ -172,6 +175,9 @@ window.__ModuleLoader__.load({
         syncArchive: 'Синхронизировать архив',
         syncArchiveDesc: 'Архивные чаты остаются скрытыми на всех компьютерах. Снятие с архива тоже синхронизируется.',
         archiveActivity: 'В архив: {archived}; из архива: {unarchived}',
+        resolveConflicts: 'Оставлять свежую версию при конфликте',
+        resolveConflictsDesc: 'Если один и тот же чат изменился на двух компьютерах, более свежая версия заменит старую. Заменённая копия сохраняется в папке конфликтов.',
+        replaced: 'Заменено: {count}',
         activity: 'Активность',
         activityDesc: 'Что произошло недавно.',
         noActivity: 'Событий синхронизации пока нет.',
@@ -293,6 +299,7 @@ window.__ModuleLoader__.load({
       const parts = []
       if (last.imported) parts.push(t('incoming', { count: last.imported }))
       if (last.updated) parts.push(t('updated', { count: last.updated }))
+      if (last.replaced) parts.push(t('replaced', { count: last.replaced }))
       if (last.titlesRenamed) parts.push(t('renamed', { count: last.titlesRenamed }))
       if (last.archived || last.unarchived) {
         parts.push(
@@ -1258,6 +1265,26 @@ window.__ModuleLoader__.load({
                   void patchConfig(
                     { syncArchive: status.settings.syncArchive === false },
                     'syncArchive',
+                  ),
+              }),
+            ),
+            h(
+              'div',
+              { className: 'cs-row' },
+              h(
+                'div',
+                { className: 'cs-row-text' },
+                h('div', { className: 'cs-row-title' }, t('resolveConflicts')),
+                h('div', { className: 'cs-row-desc' }, t('resolveConflictsDesc')),
+              ),
+              h(Switch, {
+                checked: status.settings.resolveConflicts !== false,
+                disabled: saving === 'resolveConflicts',
+                label: t('resolveConflicts'),
+                onChange: () =>
+                  void patchConfig(
+                    { resolveConflicts: status.settings.resolveConflicts === false },
+                    'resolveConflicts',
                   ),
               }),
             ),
