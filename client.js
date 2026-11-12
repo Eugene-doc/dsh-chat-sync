@@ -779,7 +779,7 @@ window.__ModuleLoader__.load({
             disabled: busy,
             onClick: () => void syncRestart(),
           },
-          h(Icon, { name: 'power', size: 15 }),
+          h(Icon, { name: 'sync', size: 15, strokeWidth: 2.1 }),
         ),
       )
     }
