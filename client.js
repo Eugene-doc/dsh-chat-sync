@@ -57,13 +57,16 @@ window.__ModuleLoader__.load({
         devices: 'Computers',
         devicesDesc: 'Each computer keeps its own snapshot of the conversation history.',
         noOtherDevices: 'Open DSH on another computer with this plugin and the same GitHub account. It will appear here after the first sync.',
-        attachChats: 'Attach and show all chats',
-        attachChatsDesc: 'Place every discovered session in a workspace and restore it from the local archive. Chat content is not changed.',
+        attachChats: 'Attach chats to workspaces',
+        attachChatsDesc: 'Place every discovered session in a workspace. Chat content and archive flags are not changed.',
         attachChatsAction: 'Attach chats',
         attachChatsBusy: 'Attaching…',
-        attachChatsDone: 'Attached: {attached}. Restored from archive: {unarchived}.',
+        attachChatsDone: 'Attached: {attached}.',
         attachChatsNone: 'All chats are already attached.',
-        activityRepaired: 'Attached: {attached}; restored: {unarchived}',
+        activityRepaired: 'Attached: {attached}',
+        syncArchive: 'Sync the archive',
+        syncArchiveDesc: 'Archived chats stay hidden on every computer. Unarchiving a chat also syncs.',
+        archiveActivity: 'Archived: {archived}; restored: {unarchived}',
         activity: 'Activity',
         activityDesc: 'What happened recently.',
         noActivity: 'No sync activity yet.',
@@ -159,13 +162,16 @@ window.__ModuleLoader__.load({
         devices: 'Компьютеры',
         devicesDesc: 'Каждый компьютер хранит собственную копию истории разговоров.',
         noOtherDevices: 'Откройте DSH на другом компьютере с этим плагином и тем же аккаунтом GitHub. Он появится здесь после первой синхронизации.',
-        attachChats: 'Прикрепить и показать все чаты',
-        attachChatsDesc: 'Разложить все найденные сессии по рабочим областям и вернуть их из локального архива. Содержимое чатов не меняется.',
+        attachChats: 'Прикрепить чаты к рабочим областям',
+        attachChatsDesc: 'Разложить все найденные сессии по рабочим областям. Содержимое и архивные флаги не меняются.',
         attachChatsAction: 'Прикрепить чаты',
         attachChatsBusy: 'Прикрепляю…',
-        attachChatsDone: 'Прикреплено: {attached}. Возвращено из архива: {unarchived}.',
+        attachChatsDone: 'Прикреплено: {attached}.',
         attachChatsNone: 'Все чаты уже прикреплены.',
-        activityRepaired: 'Прикреплено: {attached}; возвращено из архива: {unarchived}',
+        activityRepaired: 'Прикреплено: {attached}',
+        syncArchive: 'Синхронизировать архив',
+        syncArchiveDesc: 'Архивные чаты остаются скрытыми на всех компьютерах. Снятие с архива тоже синхронизируется.',
+        archiveActivity: 'В архив: {archived}; из архива: {unarchived}',
         activity: 'Активность',
         activityDesc: 'Что произошло недавно.',
         noActivity: 'Событий синхронизации пока нет.',
@@ -288,6 +294,14 @@ window.__ModuleLoader__.load({
       if (last.imported) parts.push(t('incoming', { count: last.imported }))
       if (last.updated) parts.push(t('updated', { count: last.updated }))
       if (last.titlesRenamed) parts.push(t('renamed', { count: last.titlesRenamed }))
+      if (last.archived || last.unarchived) {
+        parts.push(
+          t('archiveActivity', {
+            archived: last.archived || 0,
+            unarchived: last.unarchived || 0,
+          }),
+        )
+      }
       if (last.exported) parts.push(t('outgoing', { count: last.exported }))
       if (last.conflicts) parts.push(t('conflictCount', { count: last.conflicts }))
       return parts.length ? parts.join(' · ') : t('upToDate')
@@ -303,8 +317,11 @@ window.__ModuleLoader__.load({
       if (item?.code === 'pulled') return t('incoming', { count: item.data?.imported || 0 })
       if (item?.code === 'renamed') return t('renamed', { count: item.data?.renamed || 0 })
       if (item?.code === 'repaired') {
-        return t('activityRepaired', {
-          attached: item.data?.attached || 0,
+        return t('activityRepaired', { attached: item.data?.attached || 0 })
+      }
+      if (item?.code === 'archive') {
+        return t('archiveActivity', {
+          archived: item.data?.archived || 0,
           unarchived: item.data?.unarchived || 0,
         })
       }
@@ -715,7 +732,7 @@ window.__ModuleLoader__.load({
         try {
           const result = await request('/repair', {
             method: 'POST',
-            body: JSON.stringify({ unarchive: true }),
+            body: JSON.stringify({ unarchive: false }),
           })
           const item = result.result || {}
           if (!item.attached && !item.unarchived) {
@@ -1221,6 +1238,26 @@ window.__ModuleLoader__.load({
                   void patchConfig(
                     { addComputerName: status.settings.addComputerName === false },
                     'addComputerName',
+                  ),
+              }),
+            ),
+            h(
+              'div',
+              { className: 'cs-row' },
+              h(
+                'div',
+                { className: 'cs-row-text' },
+                h('div', { className: 'cs-row-title' }, t('syncArchive')),
+                h('div', { className: 'cs-row-desc' }, t('syncArchiveDesc')),
+              ),
+              h(Switch, {
+                checked: status.settings.syncArchive !== false,
+                disabled: saving === 'syncArchive',
+                label: t('syncArchive'),
+                onChange: () =>
+                  void patchConfig(
+                    { syncArchive: status.settings.syncArchive === false },
+                    'syncArchive',
                   ),
               }),
             ),

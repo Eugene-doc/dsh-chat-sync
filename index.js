@@ -109,7 +109,7 @@ function registerTools(ctx, engine, log) {
           await engine.startSync()
           await engine.awaitSync()
         } else if (action === 'repair') {
-          await engine.repairGrouping({ unarchive: true })
+          await engine.repairGrouping({ unarchive: false })
         }
         const status = await engine.getStatus()
         return JSON.stringify({
@@ -124,6 +124,8 @@ function registerTools(ctx, engine, log) {
                 imported: status.last.imported,
                 exported: status.last.exported,
                 titlesRenamed: status.last.titlesRenamed || 0,
+                archived: status.last.archived || 0,
+                unarchived: status.last.unarchived || 0,
                 error: status.last.error || null,
                 durationMs: status.last.durationMs,
               }
@@ -186,7 +188,7 @@ export async function apply(ctx) {
       }
       if (req.method === 'POST' && route === '/repair') {
         const body = await readBody(req)
-        const result = await engine.repairGrouping({ unarchive: body.unarchive !== false })
+        const result = await engine.repairGrouping({ unarchive: body.unarchive === true })
         json(res, 200, { ok: true, result })
         return
       }

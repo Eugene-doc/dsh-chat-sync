@@ -21,9 +21,10 @@
   Это можно отключить.
 - Показывает состояние, компьютеры, последние события, размер передачи и коммит
   в **Настройки → Чаты**.
-- Кнопка **«Прикрепить и показать все чаты»** раскладывает найденные сессии по
-  рабочим областям и возвращает их из локального архива. Содержимое чатов не
-  меняется — исправляется только видимость в боковой панели.
+- Кнопка **«Прикрепить чаты к рабочим областям»** раскладывает найденные сессии
+  по подходящим рабочим областям. Содержимое чатов и архивные флаги не меняются.
+- Синхронизирует архив: если чат архивирован на одном ПК, он остаётся скрытым и
+  на остальных. Снятие с архива тоже передаётся.
 - По желанию передаёт вложения из чатов.
 - Даёт ассистенту инструмент `chat_sync`, чтобы узнать статус или запустить
   синхронизацию.
@@ -57,7 +58,7 @@
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.2.0/dsh-chat-sync-1.2.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -80,14 +81,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > установка» или скрипт восстановления ниже. Режим `file:` нужен только для
 > разработки на компьютере, где лежит папка с исходниками.
 
-## Обновление до 1.2.0
+## Обновление до 1.3.0
 
-На каждом компьютере, где стоит 1.0.0 или 1.1.0, выполните:
+На каждом компьютере, где стоит 1.0.0, 1.1.0 или 1.2.0, выполните:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.2.0/dsh-chat-sync-1.2.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -134,7 +135,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. Попросит войти в GitHub как `Eugene-doc`.
 4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
 5. Установит плагин из релиза
-   [v1.2.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.2.0).
+   [v1.3.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.3.0).
 6. Запишет конфигурацию по умолчанию.
 
 После этого полностью закройте и откройте DeepSeek Harness, зайдите в
@@ -162,7 +163,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.2.0/dsh-chat-sync-1.2.0.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
    ```
 
 5. Полностью закройте и снова откройте DSH.
@@ -199,9 +200,11 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
   Если импортированный чат называется так же, как другой чат, к нему
   добавляется ` · Имя ПК`; при повторном совпадении — номер. Заголовок
   записывается в журнал сессии и синхронизируется как обычное изменение.
-- **Прикрепить и показать все чаты** — если после синхронизации часть чатов
-  не видна в боковой панели. Кнопка прикрепляет их к подходящей рабочей
-  области и снимает локальный архив. Сообщения и файлы сессий не меняются.
+- **Прикрепить чаты к рабочим областям** — если после синхронизации часть
+  чатов не видна в боковой панели. Кнопка прикрепляет их к подходящей рабочей
+  области, не снимая архив. Сообщения и файлы сессий не меняются.
+- **Синхронизировать архив** включено по умолчанию. Архивирование и снятие с
+  архива передаются на другие компьютеры; архивные чаты остаются скрытыми.
 - **Изменить** переключает на другой приватный репозиторий или ветку. Локальная
   копия пересоберётся при следующей синхронизации; локальные чаты не затрагиваются.
 - Новые чаты с другого компьютера прикрепляются к рабочей области с тем же путём,
@@ -303,9 +306,10 @@ computers through one private GitHub repository.
   first sync after the update. This can be turned off.
 - Shows the relay state, computers, recent activity, transfer size and commit in
   **Settings → Chats**.
-- The **Attach and show all chats** button places discovered sessions in their
-  workspaces and restores them from the local archive. Chat content is not
-  changed; only visibility in the sidebar is repaired.
+- The **Attach chats to workspaces** button places discovered sessions in their
+  workspaces without changing archive flags. Chat content is not changed.
+- Syncs the archive: a chat archived on one computer stays hidden on the others;
+  unarchiving is propagated too.
 - Optionally carries content-addressed chat attachments.
 - Exposes a `chat_sync` tool so the assistant can report status or run a sync.
 
@@ -337,7 +341,7 @@ computer or recover it after a reinstall, use the released package:
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.2.0/dsh-chat-sync-1.2.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -359,14 +363,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > or the recovery script below. The `file:` mode is only for development on the
 > computer that holds the source folder.
 
-## Updating to 1.2.0
+## Updating to 1.3.0
 
-On every computer that still runs 1.0.0 or 1.1.0:
+On every computer that still runs 1.0.0, 1.1.0 or 1.2.0:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.2.0/dsh-chat-sync-1.2.0.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.3.0/dsh-chat-sync-1.3.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -422,9 +426,11 @@ See [the recovery guide](docs/reinstall.md) for the manual route and more detail
   chat has the same title as another chat, ` · PC name` is appended (with a
   number on further collisions). The title is written to the session log and
   syncs like any other change.
-- **Attach and show all chats** repairs a sidebar that does not show some
-  synchronized chats. It attaches each session to its workspace and removes the
-  local archive flag. Messages and session files are not changed.
+- **Attach chats to workspaces** repairs a sidebar that does not show some
+  synchronized chats. It attaches each session to its workspace without changing
+  archive flags. Messages and session files are not changed.
+- **Sync the archive** is on by default. Archiving and unarchiving are propagated
+  to the other computers; archived chats stay hidden.
 - **Change** switches to another private GitHub repository or branch. The local
   checkout is rebuilt on the next sync; local chats are untouched.
 - New chats imported from another computer are attached to a workspace with the
