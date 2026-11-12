@@ -681,8 +681,12 @@ window.__ModuleLoader__.load({
         setBusy(true)
         setActionError('')
         try {
-          await request('/sync', { method: 'POST', body: '{}' })
+          const response = await request('/sync', { method: 'POST', body: '{}' })
           await refresh()
+          if (response?.result?.liveUpdated) {
+            window.setTimeout(() => window.location.reload(), 700)
+            return
+          }
         } catch (error) {
           setActionError(String(error?.message || error))
         } finally {

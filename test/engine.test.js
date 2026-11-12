@@ -436,6 +436,7 @@ test('appends a newer remote tail to an open live session', async t => {
     warnings,
   })
   assert.equal(outcome.kind, 'updated')
+  assert.equal(outcome.live, true)
   assert.equal(live.events.length, 2)
   assert.equal(live.events[1].data.content[0].text, 'fresh')
   assert.equal(warnings.length, 0)

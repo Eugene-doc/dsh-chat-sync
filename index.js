@@ -126,6 +126,7 @@ function registerTools(ctx, engine, log) {
                 titlesRenamed: status.last.titlesRenamed || 0,
                 archived: status.last.archived || 0,
                 unarchived: status.last.unarchived || 0,
+                liveUpdated: status.last.liveUpdated || 0,
                 error: status.last.error || null,
                 durationMs: status.last.durationMs,
               }
