@@ -90,7 +90,11 @@ function registerTools(ctx, engine, log) {
       parameters: {
         type: 'object',
         properties: {
-          action: { type: 'string', enum: ['status', 'sync'], description: 'Read status or run a sync.' },
+          action: {
+            type: 'string',
+            enum: ['status', 'sync', 'repair'],
+            description: 'Read status, run a sync, or attach all chats to workspaces.',
+          },
         },
         required: ['action'],
         additionalProperties: false,
@@ -100,10 +104,12 @@ function registerTools(ctx, engine, log) {
         render: (_args, value) => [{ type: 'text', text: String(value) }],
       },
       async execute(args) {
-        const action = args?.action === 'sync' ? 'sync' : 'status'
+        const action = ['sync', 'repair'].includes(args?.action) ? args.action : 'status'
         if (action === 'sync') {
           await engine.startSync()
           await engine.awaitSync()
+        } else if (action === 'repair') {
+          await engine.repairGrouping({ unarchive: true })
         }
         const status = await engine.getStatus()
         return JSON.stringify({
@@ -176,6 +182,12 @@ export async function apply(ctx) {
         const body = await readBody(req)
         const status = await engine.updateConfig(body)
         json(res, 200, { ok: true, status })
+        return
+      }
+      if (req.method === 'POST' && route === '/repair') {
+        const body = await readBody(req)
+        const result = await engine.repairGrouping({ unarchive: body.unarchive !== false })
+        json(res, 200, { ok: true, result })
         return
       }
       if (req.method === 'POST' && route === '/check') {

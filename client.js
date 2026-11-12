@@ -57,6 +57,13 @@ window.__ModuleLoader__.load({
         devices: 'Computers',
         devicesDesc: 'Each computer keeps its own snapshot of the conversation history.',
         noOtherDevices: 'Open DSH on another computer with this plugin and the same GitHub account. It will appear here after the first sync.',
+        attachChats: 'Attach and show all chats',
+        attachChatsDesc: 'Place every discovered session in a workspace and restore it from the local archive. Chat content is not changed.',
+        attachChatsAction: 'Attach chats',
+        attachChatsBusy: 'Attaching…',
+        attachChatsDone: 'Attached: {attached}. Restored from archive: {unarchived}.',
+        attachChatsNone: 'All chats are already attached.',
+        activityRepaired: 'Attached: {attached}; restored: {unarchived}',
         activity: 'Activity',
         activityDesc: 'What happened recently.',
         noActivity: 'No sync activity yet.',
@@ -152,6 +159,13 @@ window.__ModuleLoader__.load({
         devices: 'Компьютеры',
         devicesDesc: 'Каждый компьютер хранит собственную копию истории разговоров.',
         noOtherDevices: 'Откройте DSH на другом компьютере с этим плагином и тем же аккаунтом GitHub. Он появится здесь после первой синхронизации.',
+        attachChats: 'Прикрепить и показать все чаты',
+        attachChatsDesc: 'Разложить все найденные сессии по рабочим областям и вернуть их из локального архива. Содержимое чатов не меняется.',
+        attachChatsAction: 'Прикрепить чаты',
+        attachChatsBusy: 'Прикрепляю…',
+        attachChatsDone: 'Прикреплено: {attached}. Возвращено из архива: {unarchived}.',
+        attachChatsNone: 'Все чаты уже прикреплены.',
+        activityRepaired: 'Прикреплено: {attached}; возвращено из архива: {unarchived}',
         activity: 'Активность',
         activityDesc: 'Что произошло недавно.',
         noActivity: 'Событий синхронизации пока нет.',
@@ -288,6 +302,12 @@ window.__ModuleLoader__.load({
       }
       if (item?.code === 'pulled') return t('incoming', { count: item.data?.imported || 0 })
       if (item?.code === 'renamed') return t('renamed', { count: item.data?.renamed || 0 })
+      if (item?.code === 'repaired') {
+        return t('activityRepaired', {
+          attached: item.data?.attached || 0,
+          unarchived: item.data?.unarchived || 0,
+        })
+      }
       if (item?.code === 'error') return t('syncError')
       return item?.text || ''
     }
@@ -602,6 +622,8 @@ window.__ModuleLoader__.load({
       const [branchDraft, setBranchDraft] = React.useState('main')
       const [copied, setCopied] = React.useState('')
       const [showDetails, setShowDetails] = React.useState(false)
+      const [repairing, setRepairing] = React.useState(false)
+      const [repairResult, setRepairResult] = React.useState('')
       const alive = React.useRef(true)
 
       React.useEffect(() => {
@@ -685,6 +707,34 @@ window.__ModuleLoader__.load({
           if (alive.current) setSaving('')
         }
       }, [branchDraft, refresh, remoteDraft, t])
+
+      const attachChats = React.useCallback(async () => {
+        setRepairing(true)
+        setRepairResult('')
+        setActionError('')
+        try {
+          const result = await request('/repair', {
+            method: 'POST',
+            body: JSON.stringify({ unarchive: true }),
+          })
+          const item = result.result || {}
+          if (!item.attached && !item.unarchived) {
+            setRepairResult(t('attachChatsNone'))
+          } else {
+            setRepairResult(
+              t('attachChatsDone', {
+                attached: item.attached || 0,
+                unarchived: item.unarchived || 0,
+              }),
+            )
+          }
+          await refresh()
+        } catch (error) {
+          setActionError(String(error?.message || error))
+        } finally {
+          if (alive.current) setRepairing(false)
+        }
+      }, [refresh, t])
 
       const copy = React.useCallback(async (text, marker) => {
         try {
@@ -1237,6 +1287,33 @@ window.__ModuleLoader__.load({
                     h(Icon, { name: 'monitor', size: 14 }),
                     h('span', null, t('noOtherDevices')),
                   ),
+                )
+              : null,
+            h(
+              'div',
+              { className: 'cs-row' },
+              h(
+                'div',
+                { className: 'cs-row-text' },
+                h('div', { className: 'cs-row-title' }, t('attachChats')),
+                h('div', { className: 'cs-row-desc' }, t('attachChatsDesc')),
+              ),
+              h(
+                'button',
+                {
+                  type: 'button',
+                  className: 'cs-btn',
+                  disabled: repairing,
+                  onClick: () => void attachChats(),
+                },
+                repairing ? t('attachChatsBusy') : t('attachChatsAction'),
+              ),
+            ),
+            repairResult
+              ? h(
+                  'div',
+                  { className: 'cs-status-meta', style: { padding: '0 0 10px', color: 'var(--dsw-alias-state-success-primary)' } },
+                  repairResult,
                 )
               : null,
           ),

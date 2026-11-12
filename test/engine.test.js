@@ -159,15 +159,30 @@ function fakeContext() {
   const workspace = {
     path: 'D:\\work\\demo',
     title: 'demo',
-    attachSession: async id => attached.push(id),
+    sessionIds: [],
+    attachSession: async id => {
+      if (!workspace.sessionIds.includes(id)) workspace.sessionIds.push(id)
+      attached.push(id)
+    },
+  }
+  const archivedSessionIds = []
+  const registry = {
+    list: () => [workspace],
+    archivedSessionIds,
+    async unarchiveSession(id) {
+      const index = archivedSessionIds.indexOf(id)
+      if (index !== -1) archivedSessionIds.splice(index, 1)
+    },
   }
   return {
     store,
     attached,
+    registry,
+    workspace,
     ctx: {
       get(name) {
         if (name === 'sessionPersistence') return persistence
-        if (name === 'workspaceRegistry') return { list: () => [workspace] }
+        if (name === 'workspaceRegistry') return registry
         return undefined
       },
     },
@@ -261,6 +276,48 @@ test('renames duplicate local titles with the current computer name', async t =>
     .get('session-88888888-8888-4888-8888-888888888888')
     .events.filter(event => event.type === 'session/title')
   assert.equal(titleEvents.at(-1).data.title, 'Same title · This PC')
+})
+
+test('attaches all local sessions and restores them from the archive', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-repair-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const home = path.join(root, 'home')
+  const fake = fakeContext()
+  const ids = [
+    'session-99999999-9999-4999-8999-999999999999',
+    'session-aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+  ]
+  for (const [index, id] of ids.entries()) {
+    const rows = [
+      {
+        type: 'session',
+        version: 4,
+        id,
+        createdAt: 1700000000000 + index,
+        cwd: 'D:\\work\\demo',
+        isSeeded: false,
+        delegationDepth: 0,
+      },
+      {
+        type: 'session/title',
+        seq: 0,
+        time: 1700000000001 + index,
+        data: { title: `Chat ${index}`, messageSeqs: [], source: { kind: 'fallback' } },
+      },
+    ]
+    const dir = path.join(home, 'sessions', '--D-work-demo--', id)
+    await fs.mkdir(dir, { recursive: true })
+    await fs.writeFile(path.join(dir, 'session.v4.jsonl.zstd'), encodeRows(rows))
+  }
+  fake.registry.archivedSessionIds.push(ids[1])
+  const engine = new ChatSyncEngine(fake.ctx, { home, log: () => {} })
+  await engine.init()
+  const result = await engine.repairGrouping({ unarchive: true })
+  assert.equal(result.total, 2)
+  assert.equal(result.attached, 2)
+  assert.equal(result.unarchived, 1)
+  assert.deepEqual(fake.workspace.sessionIds.sort(), ids.slice().sort())
+  assert.deepEqual(fake.registry.archivedSessionIds, [])
 })
 
 test('keeps diverged remote sessions as conflict copies instead of overwriting', async t => {
