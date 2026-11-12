@@ -1,11 +1,14 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import { zstdDecompressSync } from 'node:zlib'
+
 import {
   compareSessionRows,
   decodeSession,
   encodeRows,
   projectKey,
+  zstdFrameEnd,
 } from '../lib/session.js'
 
 function makeRows(id, texts) {
@@ -51,6 +54,17 @@ test('decodes a compressed session and derives its title and counts', () => {
   assert.equal(session.messageCount, 1)
   assert.equal(session.events.length, 3)
   assert.equal(session.workspacePath, 'D:\\work\\demo')
+})
+
+test('writes a standalone header frame before the events', () => {
+  const id = 'session-12121212-1212-4212-8212-121212121212'
+  const encoded = encodeRows(makeRows(id, ['Hello']))
+  const firstEnd = zstdFrameEnd(encoded, 0)
+  const first = zstdDecompressSync(encoded.subarray(0, firstEnd)).toString('utf8')
+  const headerLines = first.trim().split('\n')
+  assert.equal(headerLines.length, 1)
+  assert.equal(JSON.parse(headerLines[0]).type, 'session')
+  assert.ok(firstEnd < encoded.length, 'events must follow in another frame')
 })
 
 test('rejects a log whose event sequence has a gap', () => {
