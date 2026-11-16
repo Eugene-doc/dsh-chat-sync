@@ -192,6 +192,91 @@ function fakeContext() {
   }
 }
 
+test('imports a self-contained seeded fork through persistence', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-seeded-import-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const home = path.join(root, 'home')
+  const id = 'session-88888888-8888-4888-8888-888888888888'
+  const rows = [
+    {
+      type: 'session',
+      version: 4,
+      id,
+      createdAt: 1700000000000,
+      cwd: 'D:\\work\\demo',
+      isSeeded: true,
+      delegationDepth: 0,
+    },
+    {
+      type: 'user/message',
+      seq: 0,
+      time: 1700000000100,
+      data: { content: [{ type: 'text', text: 'seeded fork' }], role: 'user', id: 'u1' },
+    },
+  ]
+  const buffer = encodeRows(rows)
+  const { decodeSession } = await import('../lib/session.js')
+  const remoteSession = decodeSession(buffer, id)
+  const fake = fakeContext()
+  const engine = new ChatSyncEngine(fake.ctx, { home, log: () => {} })
+  await engine.init()
+  const warnings = []
+  const outcome = await engine.importOneSession({
+    buffer,
+    remoteSession,
+    device: { id: 'other', name: 'Other PC' },
+    localById: new Map(),
+    takenTitles: new Set(),
+    conflicts: [],
+    warnings,
+  })
+  assert.equal(outcome.kind, 'imported')
+  assert.equal(fake.store.get(id).header.isSeeded, true)
+  assert.equal(fake.store.get(id).events.length, 1)
+  assert.equal(warnings.length, 0)
+})
+
+test('scans a self-contained seeded fork but skips seeded subagents', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-seeded-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const home = path.join(root, 'home')
+  const rows = (id, seeded, extra = {}) => [
+    {
+      type: 'session',
+      version: 4,
+      id,
+      createdAt: 1700000000000,
+      cwd: 'D:\\work\\demo',
+      isSeeded: seeded,
+      delegationDepth: 0,
+      ...extra,
+    },
+    {
+      type: 'user/message',
+      seq: 0,
+      time: 1700000000100,
+      data: { content: [{ type: 'text', text: 'seeded' }], role: 'user', id: 'u1' },
+    },
+  ]
+  const forkId = 'session-66666666-6666-4666-8666-666666666666'
+  const childId = 'session-77777777-7777-4777-8777-777777777777'
+  for (const [id, seeded, extra] of [
+    [forkId, true, {}],
+    [childId, true, { parentSession: 'session-parent', origin: 'subagent' }],
+  ]) {
+    const dir = path.join(home, 'sessions', '--D-work-demo--', id)
+    await fs.mkdir(dir, { recursive: true })
+    await fs.writeFile(path.join(dir, 'session.v4.jsonl.zstd'), encodeRows(rows(id, seeded, extra)))
+  }
+  const engine = new ChatSyncEngine(fakeContext().ctx, { home, log: () => {} })
+  await engine.init()
+  const result = await engine.scanLocalSessions()
+  assert.equal(result.sessions.length, 1)
+  assert.equal(result.sessions[0].id, forkId)
+  assert.equal(result.warnings.length, 1)
+  assert.match(result.warnings[0].message, /seeded subagent/)
+})
+
 test('imports a remote session through the persistence seam and attaches it to a workspace', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-engine-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))

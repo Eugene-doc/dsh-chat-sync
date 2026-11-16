@@ -31,6 +31,9 @@
 - **Обновляет открытый чат без закрытия.** Если локальная копия — это начало
   более свежей удалённой, недостающие сообщения добавляются прямо в открытую
   сессию. Закрывать чат нужно только при реально разошедшихся ветках.
+- **Синхронизирует пользовательские seeded-форки**, если у них нет
+  `parentSession` и `origin: subagent`. Служебные дочерние сессии остаются
+  локальными, чтобы не создавать дубликаты.
 - В шапке чата справа есть иконка синхронизации, индикатор статуса и красная
   иконка **«Синхронизировать и перезапустить DSH»**.
 - В настройках под обычной кнопкой синхронизации есть кнопка
@@ -68,7 +71,7 @@
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.0/dsh-chat-sync-1.6.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -91,14 +94,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > установка» или скрипт восстановления ниже. Режим `file:` нужен только для
 > разработки на компьютере, где лежит папка с исходниками.
 
-## Обновление до 1.5.2
+## Обновление до 1.6.0
 
-На каждом компьютере, где стоит 1.0.0–1.5.1, выполните:
+На каждом компьютере, где стоит 1.0.0–1.5.2, выполните:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.0/dsh-chat-sync-1.6.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -145,7 +148,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. Попросит войти в GitHub как `Eugene-doc`.
 4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
 5. Установит плагин из релиза
-   [v1.5.2](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.5.2).
+   [v1.6.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.6.0).
 6. Запишет конфигурацию по умолчанию.
 
 После этого полностью закройте и откройте DeepSeek Harness, зайдите в
@@ -173,7 +176,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.0/dsh-chat-sync-1.6.0.tgz"
    ```
 
 5. Полностью закройте и снова откройте DSH.
@@ -270,8 +273,9 @@ conflicts/          удалённые копии, которые разошли
 
 ## Ограничения
 
-- Сессии-форки (seeded) пропускаются, пока не поддерживается их раскладка
-  унаследованного журнала. Обычные разговоры это не затрагивает.
+- Самодостаточные пользовательские seeded-форки синхронизируются. Seeded-сессии
+  с `parentSession` или `origin: subagent` пропускаются: это служебные дочерние
+  сессии, их перенос создал бы дубликаты.
 - Разошедшиеся истории сохраняются, но не объединяются автоматически. Выберите
   сторону вручную; удалённая копия остаётся в `conflicts/`.
 - Изменения вложений импортируются только при включённом **Передавать вложения**.
@@ -365,7 +369,7 @@ computer or recover it after a reinstall, use the released package:
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.0/dsh-chat-sync-1.6.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -387,14 +391,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > or the recovery script below. The `file:` mode is only for development on the
 > computer that holds the source folder.
 
-## Updating to 1.5.2
+## Updating to 1.6.0
 
-On every computer that still runs 1.0.0–1.5.1:
+On every computer that still runs 1.0.0–1.5.2:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.5.2/dsh-chat-sync-1.5.2.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.0/dsh-chat-sync-1.6.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -509,8 +513,9 @@ conflicts/          remote copies that diverged
 
 ## Limitations
 
-- Seeded (forked) sessions are skipped until their inherited-log layout is
-  supported. Ordinary conversations are unaffected.
+- Self-contained user seeded forks are synchronized. Seeded sessions with a
+  `parentSession` or `origin: subagent` are skipped: they are child sessions and
+  copying them would create duplicates.
 - Divergent histories are preserved, not automatically merged. Resolve them by
   choosing one side manually; the remote copy remains in `conflicts/`.
 - Attachment changes are imported only when **Include attachments** is on.

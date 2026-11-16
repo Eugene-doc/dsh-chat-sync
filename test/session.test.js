@@ -7,6 +7,7 @@ import {
   compareSessionRows,
   decodeSession,
   encodeRows,
+  isSyncableSession,
   projectKey,
   zstdFrameEnd,
 } from '../lib/session.js'
@@ -54,6 +55,22 @@ test('decodes a compressed session and derives its title and counts', () => {
   assert.equal(session.messageCount, 1)
   assert.equal(session.events.length, 3)
   assert.equal(session.workspacePath, 'D:\\work\\demo')
+})
+
+test('accepts a self-contained seeded fork but rejects seeded subagents', () => {
+  const id = 'session-55555555-5555-4555-8555-555555555555'
+  const forkRows = makeRows(id, ['fork'])
+  forkRows[0].isSeeded = true
+  const fork = decodeSession(encodeRows(forkRows), id)
+  assert.equal(fork.seeded, true)
+  assert.equal(isSyncableSession(fork), true)
+
+  const childRows = makeRows(id, ['child'])
+  childRows[0].isSeeded = true
+  childRows[0].parentSession = 'session-parent'
+  childRows[0].origin = 'subagent'
+  const child = decodeSession(encodeRows(childRows), id)
+  assert.equal(isSyncableSession(child), false)
 })
 
 test('writes a standalone header frame before the events', () => {
