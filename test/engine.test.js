@@ -144,8 +144,8 @@ function fakeContext() {
     }
   }
   const persistence = {
-    async create(header) {
-      store.set(header.id, { header, events: [] })
+    async create(header, options = {}) {
+      store.set(header.id, { header, events: [], inheritedEventCount: options.inheritedEventCount })
       return new Handle(header.id)
     },
     async open(id) {
@@ -213,6 +213,18 @@ test('imports a self-contained seeded fork through persistence', async t => {
       time: 1700000000100,
       data: { content: [{ type: 'text', text: 'seeded fork' }], role: 'user', id: 'u1' },
     },
+    {
+      type: 'session/end-seed',
+      seq: 1,
+      time: 1700000000200,
+      data: { inherited: true },
+    },
+    {
+      type: 'session/title',
+      seq: 2,
+      time: 1700000000300,
+      data: { title: 'Seeded fork' },
+    },
   ]
   const buffer = encodeRows(rows)
   const { decodeSession } = await import('../lib/session.js')
@@ -232,7 +244,8 @@ test('imports a self-contained seeded fork through persistence', async t => {
   })
   assert.equal(outcome.kind, 'imported')
   assert.equal(fake.store.get(id).header.isSeeded, true)
-  assert.equal(fake.store.get(id).events.length, 1)
+  assert.equal(fake.store.get(id).inheritedEventCount, 2)
+  assert.equal(fake.store.get(id).events.length, 3)
   assert.equal(warnings.length, 0)
 })
 
@@ -257,6 +270,14 @@ test('scans a self-contained seeded fork but skips seeded subagents', async t =>
       time: 1700000000100,
       data: { content: [{ type: 'text', text: 'seeded' }], role: 'user', id: 'u1' },
     },
+    ...(seeded
+      ? [{
+          type: 'session/end-seed',
+          seq: 1,
+          time: 1700000000200,
+          data: { inherited: true },
+        }]
+      : []),
   ]
   const forkId = 'session-66666666-6666-4666-8666-666666666666'
   const childId = 'session-77777777-7777-4777-8777-777777777777'
@@ -273,8 +294,7 @@ test('scans a self-contained seeded fork but skips seeded subagents', async t =>
   const result = await engine.scanLocalSessions()
   assert.equal(result.sessions.length, 1)
   assert.equal(result.sessions[0].id, forkId)
-  assert.equal(result.warnings.length, 1)
-  assert.match(result.warnings[0].message, /seeded subagent/)
+  assert.equal(result.warnings.length, 0)
 })
 
 test('imports a remote session through the persistence seam and attaches it to a workspace', async t => {

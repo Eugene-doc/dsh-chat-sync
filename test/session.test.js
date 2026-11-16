@@ -57,12 +57,25 @@ test('decodes a compressed session and derives its title and counts', () => {
   assert.equal(session.workspacePath, 'D:\\work\\demo')
 })
 
-test('accepts a self-contained seeded fork but rejects seeded subagents', () => {
+test('accepts a self-contained seeded fork but rejects any child session', () => {
   const id = 'session-55555555-5555-4555-8555-555555555555'
   const forkRows = makeRows(id, ['fork'])
   forkRows[0].isSeeded = true
+  forkRows.push({
+    type: 'session/end-seed',
+    seq: 2,
+    time: 1700000000200,
+    data: { inherited: true },
+  })
+  forkRows.push({
+    type: 'session/title',
+    seq: 3,
+    time: 1700000000300,
+    data: { title: 'Forked chat' },
+  })
   const fork = decodeSession(encodeRows(forkRows), id)
   assert.equal(fork.seeded, true)
+  assert.equal(fork.inheritedEventCount, 3)
   assert.equal(isSyncableSession(fork), true)
 
   const childRows = makeRows(id, ['child'])
@@ -71,6 +84,18 @@ test('accepts a self-contained seeded fork but rejects seeded subagents', () => 
   childRows[0].origin = 'subagent'
   const child = decodeSession(encodeRows(childRows), id)
   assert.equal(isSyncableSession(child), false)
+
+  const spawnedRows = makeRows(id, ['spawned'])
+  spawnedRows[0].parentSession = 'session-parent'
+  spawnedRows[0].origin = 'subagent'
+  spawnedRows[0].delegationDepth = 1
+  const spawned = decodeSession(encodeRows(spawnedRows), id)
+  assert.equal(isSyncableSession(spawned), false)
+
+  const markerlessRows = makeRows(id, ['markerless'])
+  markerlessRows[0].isSeeded = true
+  const markerless = decodeSession(encodeRows(markerlessRows), id)
+  assert.equal(isSyncableSession(markerless), false)
 })
 
 test('writes a standalone header frame before the events', () => {
