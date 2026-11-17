@@ -127,6 +127,7 @@ async function addSecondRemoteSession(root, id, title) {
 function fakeContext() {
   const store = new Map()
   const attached = []
+  const projectionSnapshots = []
   class Handle {
     constructor(id) {
       this.id = id
@@ -177,15 +178,22 @@ function fakeContext() {
       if (index !== -1) archivedSessionIds.splice(index, 1)
     },
   }
+  const projectionCache = {
+    coldSnapshot(header, inheritedEventCount, events) {
+      projectionSnapshots.push({ header, inheritedEventCount, events: events.slice() })
+    },
+  }
   return {
     store,
     attached,
     registry,
     workspace,
+    projectionSnapshots,
     ctx: {
       get(name) {
         if (name === 'sessionPersistence') return persistence
         if (name === 'workspaceRegistry') return registry
+        if (name === 'sessionProjectionCache') return projectionCache
         return undefined
       },
     },
@@ -246,7 +254,47 @@ test('imports a self-contained seeded fork through persistence', async t => {
   assert.equal(fake.store.get(id).header.isSeeded, true)
   assert.equal(fake.store.get(id).inheritedEventCount, 2)
   assert.equal(fake.store.get(id).events.length, 3)
+  assert.equal(fake.projectionSnapshots.length, 1)
+  assert.equal(fake.projectionSnapshots[0].header.cwd, 'D:\\work\\demo')
+  assert.equal(fake.projectionSnapshots[0].inheritedEventCount, 2)
+  assert.equal(fake.projectionSnapshots[0].events.length, 3)
   assert.equal(warnings.length, 0)
+})
+
+test('rebuilds every local projection cache once per plugin version', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-projection-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const home = path.join(root, 'home')
+  const id = 'session-99999999-9999-4999-8999-999999999999'
+  const rows = [
+    {
+      type: 'session',
+      version: 4,
+      id,
+      createdAt: 1700000000000,
+      cwd: 'D:\\work\\demo',
+      isSeeded: false,
+      delegationDepth: 0,
+    },
+    {
+      type: 'user/message',
+      seq: 0,
+      time: 1700000000100,
+      data: { content: [{ type: 'text', text: 'projection' }], role: 'user', id: 'u1' },
+    },
+  ]
+  const dir = path.join(home, 'sessions', '--D-work-demo--', id)
+  await fs.mkdir(dir, { recursive: true })
+  await fs.writeFile(path.join(dir, 'session.v4.jsonl.zstd'), encodeRows(rows))
+  const fake = fakeContext()
+  const engine = new ChatSyncEngine(fake.ctx, { home, log: () => {} })
+  await engine.init()
+  const first = await engine.ensureProjectionCaches()
+  const second = await engine.ensureProjectionCaches()
+  assert.equal(first.refreshed, 1)
+  assert.equal(second.refreshed, 0)
+  assert.equal(fake.projectionSnapshots.length, 1)
+  assert.equal(engine.state.projectionCacheVersion, JSON.parse(await fs.readFile(new URL('../package.json', import.meta.url), 'utf8')).version)
 })
 
 test('scans a self-contained seeded fork but skips seeded subagents', async t => {
