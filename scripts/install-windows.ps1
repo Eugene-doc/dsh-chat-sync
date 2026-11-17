@@ -1,4 +1,4 @@
-# Chat Sync bootstrap for another Windows PC.
+﻿# Chat Sync bootstrap for another Windows PC.
 #
 # Installs DeepSeek Harness (if missing), Git and GitHub CLI, signs Git in to
 # the account that owns the private relay, installs the Chat Sync plugin from
@@ -9,7 +9,7 @@
 
 $ErrorActionPreference = 'Stop'
 
-$ReleaseUrl = 'https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.4/dsh-chat-sync-1.6.4.tgz'
+$ReleaseUrl = 'https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.5/dsh-chat-sync-1.6.5.tgz'
 $Owner = 'Eugene-doc'
 $RelayRepo = 'Eugene-doc/dsh-sync'
 
@@ -144,4 +144,5 @@ Write-Host ''
 Write-Host 'Done.'
 Write-Host 'Fully quit DeepSeek Harness and open it again.'
 Write-Host 'Open Settings -> Chats and press "Sync now" to fetch this computer''s history.'
+
 

@@ -349,12 +349,13 @@ export async function apply(ctx) {
   registerTools(ctx, engine, log)
 
   let timer = null
-  let startupTimer = null
   const schedule = () => {
     if (timer) clearInterval(timer)
     timer = null
     if (!engine.config.autoSync) return
     const intervalMs = Math.max(1, engine.config.intervalMinutes) * 60_000
+    // The first automatic run happens only after one full interval. DSH startup
+    // must not begin a sync before the user has a chance to inspect the app.
     timer = setInterval(() => {
       if (!engine.running) void engine.startSync()
     }, intervalMs)
@@ -363,15 +364,9 @@ export async function apply(ctx) {
   engine.onConfigChange = schedule
   schedule()
 
-  startupTimer = setTimeout(() => {
-    if (engine.config.autoSync && !engine.running) void engine.startSync()
-  }, 2200)
-  if (typeof startupTimer.unref === 'function') startupTimer.unref()
-
   ctx.effect(
     () => () => {
       if (timer) clearInterval(timer)
-      if (startupTimer) clearTimeout(startupTimer)
       engine.onConfigChange = null
     },
     'chat-sync: timers',
