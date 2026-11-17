@@ -126,6 +126,49 @@ test('compares append-only histories without treating the project path as conten
   assert.equal(compareSessionRows(longer, rows), 'remote-prefix')
 })
 
+test('ignores timestamps on an untagged end-seed boundary', () => {
+  const id = 'session-45454545-4545-4545-8545-454545454545'
+  const local = makeRows(id, ['one'])
+  local.push({
+    type: 'session/end-seed',
+    seq: 2,
+    time: 1700000000200,
+    data: {},
+  })
+  local.push({
+    type: 'session/title',
+    seq: 3,
+    time: 1700000000300,
+    data: { title: 'continued' },
+  })
+  const remote = makeRows(id, ['one'])
+  remote.push({
+    type: 'session/end-seed',
+    seq: 2,
+    time: 1700000000900,
+    data: {},
+  })
+  assert.equal(compareSessionRows(local, remote), 'remote-prefix')
+  assert.equal(compareSessionRows(remote, local), 'local-prefix')
+
+  const same = makeRows(id, ['one'])
+  same.push({
+    type: 'session/end-seed',
+    seq: 2,
+    time: 1700000000200,
+    data: {},
+  })
+  assert.equal(compareSessionRows(same, remote), 'equal')
+
+  const tagged = remote.map(row => ({ ...row }))
+  tagged[2].data = { inherited: true }
+  assert.equal(compareSessionRows(local, tagged), 'diverged')
+
+  const differentData = remote.map(row => ({ ...row }))
+  differentData[2].data = { boundary: 'other' }
+  assert.equal(compareSessionRows(local, differentData), 'diverged')
+})
+
 test('detects divergent histories', () => {
   const id = 'session-44444444-4444-4444-8444-444444444444'
   const left = makeRows(id, ['one'])
