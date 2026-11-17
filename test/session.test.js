@@ -98,6 +98,18 @@ test('accepts a self-contained seeded fork but rejects any child session', () =>
   assert.equal(isSyncableSession(markerless), false)
 })
 
+test('rejects a delivery marker whose throughSeq does not precede it', () => {
+  const id = 'session-56565656-5656-4656-8656-565656565656'
+  const rows = makeRows(id, ['one'])
+  rows.push({
+    type: 'session-log-deepseek/delivery-accepted',
+    seq: 2,
+    time: 1700000000200,
+    data: { sessionId: id, sessionFormatVersion: 4, throughSeq: 2 },
+  })
+  assert.throws(() => decodeSession(encodeRows(rows), id), /throughSeq must precede/)
+})
+
 test('writes a standalone header frame before the events', () => {
   const id = 'session-12121212-1212-4212-8212-121212121212'
   const encoded = encodeRows(makeRows(id, ['Hello']))

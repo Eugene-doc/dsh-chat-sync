@@ -523,7 +523,7 @@ test('applies the newest remote archive flag and can undo it', async t => {
   assert.deepEqual(fake.registry.archivedSessionIds, [])
 })
 
-test('appends a newer remote tail to an open live session', async t => {
+test('updates a newer remote tail through persistence without live append', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-live-'))
   t.after(() => fs.rm(root, { recursive: true, force: true }))
   const home = path.join(root, 'home')
@@ -565,6 +565,7 @@ test('appends a newer remote tail to an open live session', async t => {
   const remoteBuffer = encodeRows(rows('fresh', 1, 1700000000200))
   const remoteSession = decodeSession(remoteBuffer, id)
   const fake = fakeContext()
+  fake.store.set(id, { header: local.header, events: local.events.slice() })
   const live = {
     events: local.events.slice(),
     append(type, data) {
@@ -589,9 +590,9 @@ test('appends a newer remote tail to an open live session', async t => {
     warnings,
   })
   assert.equal(outcome.kind, 'updated')
-  assert.equal(outcome.live, true)
-  assert.equal(live.events.length, 2)
-  assert.equal(live.events[1].data.content[0].text, 'fresh')
+  assert.equal(outcome.live, undefined)
+  assert.equal(live.events.length, 1)
+  assert.equal(fake.store.get(id).events.at(-1).data.content[0].text, 'fresh')
   assert.equal(warnings.length, 0)
 })
 
