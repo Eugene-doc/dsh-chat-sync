@@ -54,6 +54,20 @@ test('offline chooser replaces only a clean local prefix with the longest chain'
   assert.equal(chooseRemoteCandidate({ session: local }, [{ session: short }]).action, 'replace')
   assert.equal(chooseRemoteCandidate({ session: local }, [{ session: long }, { session: short }]).candidate.session, long)
   assert.equal(chooseRemoteCandidate({ session: long }, [{ session: local }]).action, 'keep-local')
+
+  const equal = local
+  assert.equal(
+    chooseRemoteCandidate({ session: local }, [{ session: equal }, { session: short }]).candidate.session,
+    short,
+  )
+  assert.equal(
+    chooseRemoteCandidate({ session: local }, [{ session: short }, { session: short }]).candidate.session,
+    short,
+  )
+  assert.equal(
+    chooseRemoteCandidate({ session: local }, [{ session: long }, { session: short }, { session: short }]).candidate.session,
+    long,
+  )
 })
 
 test('offline chooser quarantines divergent and competing remote branches', () => {
@@ -61,6 +75,10 @@ test('offline chooser quarantines divergent and competing remote branches', () =
   const local = session(id, ['one'])
   const divergent = session(id, ['different'])
   assert.equal(chooseRemoteCandidate({ session: local }, [{ session: divergent }]).action, 'conflict')
+  assert.equal(
+    chooseRemoteCandidate({ session: local }, [{ session: local }, { session: divergent }]).action,
+    'conflict',
+  )
 
   const branchA = session(id, ['one', 'a'])
   const branchB = session(id, ['one', 'b'])

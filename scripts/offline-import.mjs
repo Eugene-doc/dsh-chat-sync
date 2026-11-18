@@ -23,6 +23,7 @@ import {
   projectionCachePath,
   readRemoteCandidates,
   resolveGitSha,
+  restoreBackup,
   saveJournal,
   scanLocalInventory,
 } from '../lib/offline.js'
@@ -92,8 +93,11 @@ async function run(command, args, options = {}) {
 }
 
 async function listDshProcesses() {
-  if (process.platform !== 'win32') return []
+  if (process.platform !== 'win32') {
+    throw new Error('Offline import currently supports Windows only.')
+  }
   const script = [
+    "$ErrorActionPreference = 'Stop'",
     "$items = Get-CimInstance Win32_Process | Where-Object {",
     "  $_.Name -eq 'DeepSeek Harness.exe' -or",
     "  ($_.ExecutablePath -and $_.ExecutablePath -like '*DeepSeek Harness*')",
@@ -143,23 +147,47 @@ async function acquireLock(home) {
   const file = path.join(home, 'chat-sync', 'offline', 'operation.lock')
   await fs.mkdir(path.dirname(file), { recursive: true })
   const payload = JSON.stringify({ pid: process.pid, startedAt: Date.now() })
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 30; attempt += 1) {
     try {
       const handle = await fs.open(file, 'wx', 0o600)
-      await handle.writeFile(payload)
-      await handle.sync()
-      await handle.close()
-      return { file, release: async () => { await fs.rm(file, { force: true }) } }
+      try {
+        await handle.writeFile(payload)
+        await handle.sync()
+      } finally {
+        await handle.close()
+      }
+      return {
+        file,
+        release: async () => {
+          try {
+            const owner = JSON.parse(await fs.readFile(file, 'utf8'))
+            if (Number(owner.pid) === process.pid) await fs.rm(file, { force: true })
+          } catch {}
+        },
+      }
     } catch (error) {
       if (error?.code !== 'EEXIST') throw error
       let owner = null
+      let parseError = null
       try {
         owner = JSON.parse(await fs.readFile(file, 'utf8'))
-      } catch {}
+      } catch (readError) {
+        parseError = readError
+      }
       if (owner && processIsAlive(owner.pid)) {
         throw new Error(`Another offline import is running (pid ${owner.pid}).`)
       }
+      if (!owner) {
+        // A concurrent creator may not have written its payload yet. Give it a
+        // short grace period instead of deleting a live lock.
+        const stat = await fs.stat(file).catch(() => null)
+        if (stat && Date.now() - stat.mtimeMs < 10_000) {
+          await new Promise(resolve => setTimeout(resolve, 100))
+          continue
+        }
+      }
       await fs.rm(file, { force: true })
+      if (parseError && attempt === 29) throw new Error('Could not read the offline import lock.')
     }
   }
   throw new Error('Could not acquire the offline import lock.')
@@ -217,22 +245,51 @@ async function findIncompleteJournal(home) {
   return null
 }
 
+async function fileHash(file) {
+  return sha256(await fs.readFile(file))
+}
+
+async function removeProjection(home, id) {
+  const cache = projectionCachePath(home, id)
+  try {
+    await fs.rm(cache, { force: true })
+  } catch (error) {
+    throw new Error(`Could not clear projection cache for ${id}: ${errorMessage(error)}`)
+  }
+}
+
 async function recoverIncomplete(home, log) {
   const found = await findIncompleteJournal(home)
   if (!found) return
   log(`recovering incomplete offline operation: ${found.directory}`)
   for (const entry of found.journal.entries || []) {
-    if (entry.status === 'committed' || entry.status === 'cache-pending') {
-      const cache = projectionCachePath(home, entry.id)
-      try { await fs.rm(cache, { force: true }) } catch (error) {
-        throw new Error(`Could not clear projection cache for ${entry.id}: ${errorMessage(error)}`)
-      }
-      entry.status = 'cache-cleared'
+    if (entry.status === 'cache-cleared') continue
+    let current
+    try {
+      current = await fileHash(entry.file)
+    } catch (error) {
+      throw new Error(`Cannot inspect interrupted session ${entry.id}: ${errorMessage(error)}`)
     }
-    if (entry.status === 'staged' && entry.backup) {
-      await fs.copyFile(entry.backup, entry.file)
+
+    if (current === entry.oldHash) {
+      // The replacement never reached the file, or was already rolled back.
       entry.status = 'rolled-back'
+      await removeProjection(home, entry.id)
+      await saveJournal(found.directory, found.journal)
+      continue
     }
+    if (entry.newHash && current !== entry.newHash) {
+      throw new Error(
+        `Session ${entry.id} changed after the interrupted import; refusing to overwrite it.`,
+      )
+    }
+    if (!entry.backup) {
+      throw new Error(`No backup is available for interrupted session ${entry.id}.`)
+    }
+    await restoreBackup(entry.file, entry.backup)
+    await removeProjection(home, entry.id)
+    entry.status = 'rolled-back'
+    await saveJournal(found.directory, found.journal)
   }
   found.journal.stage = 'done'
   found.journal.recoveredAt = new Date().toISOString()
@@ -315,6 +372,10 @@ async function main() {
 
       const deviceIds = listRemoteDevices(repo, sha)
       const remoteById = readRemoteCandidates(repo, sha, deviceIds)
+      const afterFetch = await listDshProcesses()
+      if (afterFetch.length) {
+        throw new Error('DSH was started during the offline import; refusing to write local sessions.')
+      }
       let replaced = 0
       for (const [id, local] of inventory.byId) {
         if (local.duplicate) { log(`skip ${id}: duplicate local id`); continue }
@@ -340,6 +401,7 @@ async function main() {
         const entry = journal.entries.at(-1)
         try {
           const applied = await applyReplacement({ home, local, candidate, journalDir: directory })
+          entry.newHash = applied.newHash || entry.newHash
           entry.status = applied.cacheRemoved ? 'cache-cleared' : 'cache-pending'
           if (!applied.cacheRemoved) throw new Error(`projection cache was not cleared for ${id}`)
           await saveJournal(directory, journal)
@@ -347,8 +409,16 @@ async function main() {
           log(`updated ${id} (${formatBytes(applied.bytes || candidate.buffer.length)})`)
         } catch (error) {
           try {
-            if (entry.backup) await fs.copyFile(entry.backup, entry.file)
-            await fs.rm(projectionCachePath(home, id), { force: true })
+            const current = await fileHash(entry.file)
+            if (current === entry.oldHash) {
+              // Nothing was committed.
+            } else if (current === entry.newHash) {
+              if (!entry.backup) throw new Error(`no backup for ${id}`)
+              await restoreBackup(entry.file, entry.backup)
+            } else {
+              throw new Error(`session ${id} changed during rollback; refusing to overwrite it`)
+            }
+            await removeProjection(home, id)
             entry.status = 'rolled-back'
             await saveJournal(directory, journal)
           } catch (rollbackError) {
@@ -366,8 +436,11 @@ async function main() {
       log('dry-run: no fetch, no writes, no cache changes')
     }
 
-    if (!options.dryRun && wasRunning && !options.noRestart) {
-      startAfter = processes.find(item => item.ExecutablePath)?.ExecutablePath || null
+    if (!options.dryRun && !options.noRestart && (wasRunning || options.restart)) {
+      const localAppData = process.env.LOCALAPPDATA || path.join(os.homedir(), 'AppData', 'Local')
+      const fallbackExe = path.join(localAppData, 'Programs', 'DeepSeek Harness', 'DeepSeek Harness.exe')
+      startAfter = processes.find(item => item.ExecutablePath)?.ExecutablePath || fallbackExe
+      if (!(await fs.stat(startAfter).catch(() => null))) startAfter = null
     }
   } catch (error) {
     failed = true
@@ -378,9 +451,11 @@ async function main() {
   }
 
   if (!failed && startAfter) {
-    spawn(startAfter, [], { detached: true, stdio: 'ignore', cwd: path.dirname(startAfter) }).unref()
-    log(`DSH started: ${startAfter}`)
-  } else if (!failed && wasRunning && !options.dryRun && !options.noRestart && !startAfter) {
+    const child = spawn(startAfter, [], { detached: true, stdio: 'ignore', cwd: path.dirname(startAfter) })
+    child.on('error', error => log(`could not start DSH: ${errorMessage(error)}`))
+    child.unref()
+    log(`DSH start requested: ${startAfter}`)
+  } else if (!failed && (wasRunning || options.restart) && !options.dryRun && !options.noRestart && !startAfter) {
     log('DSH was running but its executable path is unknown; start it manually')
   }
 }
