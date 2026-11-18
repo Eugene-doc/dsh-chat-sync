@@ -1,4 +1,4 @@
-﻿# Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїРѕСЃР»Рµ РїРµСЂРµСѓСЃС‚Р°РЅРѕРІРєРё
+# Р’РѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРёРµ РїРѕСЃР»Рµ РїРµСЂРµСѓСЃС‚Р°РЅРѕРІРєРё
 
 РџР»Р°РіРёРЅ Рё РёСЃС‚РѕСЂРёСЏ С‡Р°С‚РѕРІ вЂ” СЂР°Р·РЅС‹Рµ РІРµС‰Рё. РЎР°Рј РїР»Р°РіРёРЅ РјРѕР¶РЅРѕ РїРѕСЃС‚Р°РІРёС‚СЊ Р·Р°РЅРѕРІРѕ РёР·
 РїСѓР±Р»РёС‡РЅРѕРіРѕ СЂРµРїРѕР·РёС‚РѕСЂРёСЏ, Р° РёСЃС‚РѕСЂРёСЏ Р»РµР¶РёС‚ РІ РїСЂРёРІР°С‚РЅРѕРј
@@ -37,7 +37,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. РџРѕРїСЂРѕСЃРёС‚ РІРѕР№С‚Рё РІ GitHub РєР°Рє `Eugene-doc`.
 4. РџСЂРѕРІРµСЂРёС‚ РґРѕСЃС‚СѓРї Рє РїСЂРёРІР°С‚РЅРѕРјСѓ СЂРµРїРѕР·РёС‚РѕСЂРёСЋ `Eugene-doc/dsh-sync`.
 5. РЈСЃС‚Р°РЅРѕРІРёС‚ РїР»Р°РіРёРЅ РёР· СЂРµР»РёР·Р°
-   [v1.6.5](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.6.5).
+   [v1.7.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.7.0).
 6. Р—Р°РїРёС€РµС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёСЋ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ.
 
 РџРѕСЃР»Рµ СЌС‚РѕРіРѕ РїРѕР»РЅРѕСЃС‚СЊСЋ Р·Р°РєСЂРѕР№С‚Рµ Рё РѕС‚РєСЂРѕР№С‚Рµ DeepSeek Harness, Р·Р°Р№РґРёС‚Рµ РІ
@@ -65,7 +65,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.5/dsh-chat-sync-1.6.5.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.7.0/dsh-chat-sync-1.7.0.tgz"
    ```
 
 5. РџРѕР»РЅРѕСЃС‚СЊСЋ Р·Р°РєСЂРѕР№С‚Рµ Рё СЃРЅРѕРІР° РѕС‚РєСЂРѕР№С‚Рµ DSH.
@@ -138,7 +138,7 @@ The script:
 3. Asks you to sign in to GitHub as `Eugene-doc`.
 4. Checks access to the private `Eugene-doc/dsh-sync` repository.
 5. Installs the plugin from the
-   [v1.6.5](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.6.5)
+   [v1.7.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.7.0)
    release.
 6. Writes the default configuration.
 
@@ -167,7 +167,7 @@ official sites and run the script again.
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.5/dsh-chat-sync-1.6.5.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.7.0/dsh-chat-sync-1.7.0.tgz"
    ```
 
 5. Fully quit and reopen DSH.

@@ -1,6 +1,6 @@
 {
   "name": "dsh-chat-sync",
-  "version": "1.6.5",
+  "version": "1.7.0",
   "private": true,
   "type": "module",
   "description": "Carries chat history between computers through a private GitHub repository.",
@@ -21,7 +21,8 @@
     "cordis.patch.yml",
     "README.md",
     "LICENSE",
-    "docs"
+    "docs",
+    "scripts"
   ],
   "dsh": {
     "bundle": {
@@ -42,6 +43,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "offline-import": "node scripts/offline-import.mjs"
   }
 }

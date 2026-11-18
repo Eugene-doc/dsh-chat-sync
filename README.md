@@ -71,7 +71,7 @@
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.5/dsh-chat-sync-1.6.5.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.7.0/dsh-chat-sync-1.7.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -94,14 +94,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > установка» или скрипт восстановления ниже. Режим `file:` нужен только для
 > разработки на компьютере, где лежит папка с исходниками.
 
-## Обновление до 1.6.5
+## Обновление до 1.7.0
 
 На каждом компьютере, где стоит 1.0.0–1.5.2, выполните:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.5/dsh-chat-sync-1.6.5.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.7.0/dsh-chat-sync-1.7.0.tgz"
 ```
 
 Полностью закройте и снова откройте DeepSeek Harness. Откройте
@@ -148,7 +148,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
 3. Попросит войти в GitHub как `Eugene-doc`.
 4. Проверит доступ к приватному репозиторию `Eugene-doc/dsh-sync`.
 5. Установит плагин из релиза
-   [v1.6.5](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.6.5).
+   [v1.7.0](https://github.com/Eugene-doc/dsh-chat-sync/releases/tag/v1.7.0).
 6. Запишет конфигурацию по умолчанию.
 
 После этого полностью закройте и откройте DeepSeek Harness, зайдите в
@@ -176,7 +176,7 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
    ```powershell
    & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
      plugin --profile desktop add `
-     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.5/dsh-chat-sync-1.6.5.tgz"
+     "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.7.0/dsh-chat-sync-1.7.0.tgz"
    ```
 
 5. Полностью закройте и снова откройте DSH.
@@ -210,6 +210,11 @@ powershell -ExecutionPolicy Bypass -File "$env:TEMP\chat-sync-install.ps1"
   открыто. Можно выбрать 5, 10, 30 или 60 минут.
 - **Передавать вложения** добавляет изображения и файлы из чатов. По умолчанию
   выключено, потому что репозиторий может быстро вырасти.
+- **Offline import CLI** (`scripts/offline-import.mjs`) импортирует изменения
+  только при полностью закрытом DSH. Если DSH запущен, CLI сначала спрашивает
+  разрешение на полное завершение; ответ `N` ничего не меняет. Phase 1
+  обновляет только существующие чаты, не создаёт новые и не переносит
+  вложения.
 - **Добавлять имя компьютера к одинаковым названиям** включено по умолчанию.
   Если импортированный чат называется так же, как другой чат, к нему
   добавляется ` · Имя ПК`; при повторном совпадении — номер. Заголовок
@@ -370,7 +375,7 @@ computer or recover it after a reinstall, use the released package:
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.5/dsh-chat-sync-1.6.5.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.7.0/dsh-chat-sync-1.7.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -392,14 +397,14 @@ dsh plugin --profile desktop add "file:D:\My Drive\DeepSeekHarness\plugins\dsh-c
 > or the recovery script below. The `file:` mode is only for development on the
 > computer that holds the source folder.
 
-## Updating to 1.6.5
+## Updating to 1.7.0
 
 On every computer that still runs 1.0.0–1.5.2:
 
 ```powershell
 & "$env:LOCALAPPDATA\Programs\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" `
   plugin --profile desktop add `
-  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.6.5/dsh-chat-sync-1.6.5.tgz"
+  "https://github.com/Eugene-doc/dsh-chat-sync/releases/download/v1.7.0/dsh-chat-sync-1.7.0.tgz"
 ```
 
 Fully quit and reopen DeepSeek Harness. Open **Settings → Chats** and press
@@ -452,6 +457,10 @@ See [the recovery guide](docs/reinstall.md) for the manual route and more detail
   choose 5, 10, 30 or 60 minutes.
 - **Include attachments** adds images and files referenced by chats. It is off
   by default because the relay can grow quickly.
+- **Offline import CLI** (`scripts/offline-import.mjs`) imports changes only
+  while DSH is fully closed. If DSH is running, the CLI first asks for explicit
+  permission to stop it; `N` changes nothing. Phase 1 updates existing chats
+  only, creates no new sessions and transfers no attachments.
 - **Add computer name to duplicate titles** is on by default. When an imported
   chat has the same title as another chat, ` · PC name` is appended (with a
   number on further collisions). The title is written to the session log and
