@@ -166,10 +166,26 @@ function fakeContext() {
       attached.push(id)
     },
   }
+  const workspaces = [workspace]
   const archivedSessionIds = []
   const registry = {
-    list: () => [workspace],
+    list: () => workspaces,
     archivedSessionIds,
+    async create(path, title) {
+      const existing = workspaces.find(item => item.path.toLowerCase() === path.toLowerCase())
+      if (existing) return existing
+      const created = {
+        path,
+        title: title || 'Workspace',
+        sessionIds: [],
+        attachSession: async id => {
+          if (!created.sessionIds.includes(id)) created.sessionIds.push(id)
+          attached.push(id)
+        },
+      }
+      workspaces.unshift(created)
+      return created
+    },
     async archiveSession(id) {
       if (!archivedSessionIds.includes(id)) archivedSessionIds.push(id)
     },
@@ -199,6 +215,31 @@ function fakeContext() {
     },
   }
 }
+
+test('creates a missing workspace from a remote workspace manifest', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-workspace-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const home = path.join(root, 'home')
+  const remotePath = path.join(root, 'remote-workspace')
+  await fs.mkdir(remotePath, { recursive: true })
+  const fake = fakeContext()
+  const engine = new ChatSyncEngine(fake.ctx, { home, log: () => {} })
+  await engine.init()
+  const result = await engine.importWorkspaces([
+    {
+      workspaces: [
+        {
+          title: 'Григорьев_СВО',
+          path: remotePath,
+          sessionIds: [],
+        },
+      ],
+    },
+  ])
+  assert.equal(result.created, 1)
+  const created = fake.registry.list().find(item => item.path === remotePath)
+  assert.equal(created.title, 'Григорьев_СВО')
+})
 
 test('imports a self-contained seeded fork through persistence', async t => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'chat-sync-seeded-import-'))
